@@ -6361,3 +6361,19 @@ or branch history instead.
   helper-owned.
 - Why: Startup/runtime checks should preserve interpreter-source diagnostics
   while keeping Make as the entrypoint instead of the logic carrier.
+
+## D-377: Move dependency lock workflows into a runner helper
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `make`, `dependencies`, `lockfiles`, `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Add `tools.run_dependency_lock`, route
+  `deps-lock` and `deps-lock-check` through it, and add focused helper and
+  Make contract tests.
+- Decision: Dependency lock bootstrap, compile, and diff-check dispatch are
+  helper-owned.
+- Why: Dependency lock targets should keep their public Make entrypoints while
+  removing inline shell conditionals and keeping pip-tools bootstrap policy
+  testable.

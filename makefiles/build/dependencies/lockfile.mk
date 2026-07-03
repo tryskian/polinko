@@ -3,23 +3,8 @@
 
 deps-lock:
 	@$(call repo_activity,make deps-lock,deps-lock)
-	@set -eu; \
-	if ! $(PYTHON) -m piptools --version >/dev/null 2>&1; then \
-		$(PYTHON) -m pip install "pip-tools==$(PIP_TOOLS_VERSION)"; \
-	fi; \
-	$(PYTHON) -m piptools compile \
-		--resolver=backtracking \
-		--allow-unsafe \
-		--strip-extras \
-		--output-file "$(REQUIREMENTS_LOCK)" \
-		"$(REQUIREMENTS_IN)"
+	$(PYTHON) -m tools.run_dependency_lock --python "$(PYTHON)" --requirements-in "$(REQUIREMENTS_IN)" --requirements-lock "$(REQUIREMENTS_LOCK)" --pip-tools-version "$(PIP_TOOLS_VERSION)" --ensure-pip-tools
 
 deps-lock-check:
 	@$(call repo_activity,make deps-lock-check,deps-lock-check)
-	$(PYTHON) -m piptools compile \
-		--resolver=backtracking \
-		--allow-unsafe \
-		--output-file="$(REQUIREMENTS_LOCK)" \
-		--strip-extras \
-		"$(REQUIREMENTS_IN)"
-	git diff --exit-code -- "$(REQUIREMENTS_LOCK)"
+	$(PYTHON) -m tools.run_dependency_lock --python "$(PYTHON)" --requirements-in "$(REQUIREMENTS_IN)" --requirements-lock "$(REQUIREMENTS_LOCK)" --check-lockfile

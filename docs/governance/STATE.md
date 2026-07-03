@@ -786,6 +786,9 @@ Last updated: 2026-07-02
   - `make doctor-env` dispatches through `tools.run_doctor_env`, which owns
     interpreter-source labelling, active virtualenv derivation, and
     `tools.doctor_env` process execution
+  - dependency lock workflows dispatch through `tools.run_dependency_lock`,
+    keeping pip-tools bootstrap, compile, and lockfile diff-check behaviour in
+    a tested Python helper
   - direct runtime shell wrappers share `tools/python_runtime.sh`, so explicit
     `PYTHON` wins only when it resolves to an executable command, repo `.venv`
     is preferred for direct invocation, and `python3` remains the final

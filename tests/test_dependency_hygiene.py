@@ -460,8 +460,11 @@ class DependencyHygieneTests(unittest.TestCase):
 
     def test_dependency_lock_and_check_use_same_resolver(self) -> None:
         build_make = _read_makefile_source("makefiles/build.mk")
+        lock_helper = _read("tools/run_dependency_lock.py")
 
-        self.assertEqual(build_make.count("--resolver=backtracking"), 2)
+        self.assertNotIn("--resolver=backtracking", build_make)
+        self.assertEqual(lock_helper.count('"--resolver=backtracking"'), 1)
+        self.assertIn("tools.run_dependency_lock", build_make)
 
     def test_precommit_uses_repo_owned_lightweight_style_and_doc_checks(self) -> None:
         precommit = _read(".pre-commit-config.yaml")
