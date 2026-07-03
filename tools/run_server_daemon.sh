@@ -25,19 +25,21 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
+# shellcheck source=tools/python_runtime.sh
+. "$script_dir/python_runtime.sh"
+# shellcheck source=tools/process_lifecycle_common.sh
+. "$script_dir/process_lifecycle_common.sh"
 server_repo_slug=${SERVER_REPO_SLUG:-${POLINKO_REPO_ROOT##*/}}
-if [ -z "$server_repo_slug" ]; then
-	server_repo_slug=polinko
-fi
+polinko_require_non_empty_token \
+	SERVER_REPO_SLUG \
+	"$server_repo_slug" \
+	"repo slug" \
+	"server-daemon runtime state"
 server_runtime_root=${SERVER_RUNTIME_ROOT:-/tmp/polinko-runtime}
 server_state_dir=${SERVER_STATE_DIR:-$server_runtime_root/$server_repo_slug}
 server_pid_file=${SERVER_PID_FILE:-$server_state_dir/server.pid}
 server_log=${SERVER_LOG:-$server_state_dir/server.log}
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
-# shellcheck source=tools/python_runtime.sh
-. "$script_dir/python_runtime.sh"
-# shellcheck source=tools/process_lifecycle_common.sh
-. "$script_dir/process_lifecycle_common.sh"
 polinko_require_tcp_port DEV_BACKEND_PORT "$dev_backend_port" "server-daemon launch"
 polinko_require_url_port_matches \
 	SERVER_HEALTH_URL \

@@ -154,6 +154,8 @@ Last updated: 2026-07-03
   - `server-daemon` PID and log defaults live under repo-scoped
     `SERVER_STATE_DIR`, and status reports repo context plus PID/log paths
     before liveness
+  - `server-daemon` validates explicit repo-slug config before deriving
+    repo-scoped PID/log paths
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
