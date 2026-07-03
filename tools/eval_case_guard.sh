@@ -11,6 +11,10 @@ eval_case_guard_or_exit() {
 	_eval_case_guard_missing_hint=$3
 	_eval_case_guard_empty_message=$4
 
+	_eval_case_guard_shell_command_common=${SHELL_COMMAND_COMMON_SCRIPT:-${script_dir:-./tools}/shell_command_common.sh}
+	# shellcheck source=./tools/shell_command_common.sh
+	. "$_eval_case_guard_shell_command_common"
+
 	if [ ! -f "$_eval_case_guard_path" ]; then
 		echo "$_eval_case_guard_missing_message: $_eval_case_guard_path"
 		if [ -n "$_eval_case_guard_missing_hint" ]; then
@@ -20,7 +24,7 @@ eval_case_guard_or_exit() {
 	fi
 
 	_eval_case_guard_status=0
-	if ! command -v polinko_default_python_bin >/dev/null 2>&1; then
+	if ! polinko_command_available polinko_default_python_bin; then
 		_eval_case_guard_python_runtime=${PYTHON_RUNTIME_SCRIPT:-./tools/python_runtime.sh}
 		# shellcheck source=./tools/python_runtime.sh
 		. "$_eval_case_guard_python_runtime"

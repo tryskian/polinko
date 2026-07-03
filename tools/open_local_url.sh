@@ -38,6 +38,14 @@ if [ "$#" -ne 1 ]; then
 	exit 2
 fi
 
+script_path=${BASH_SOURCE[0]}
+script_dir=${script_path%/*}
+if [ "$script_dir" = "$script_path" ]; then
+	script_dir=.
+fi
+# shellcheck source=tools/shell_command_common.sh
+source "$script_dir/shell_command_common.sh"
+
 url=$1
 
 if ! is_local_url "$url"; then
@@ -45,12 +53,12 @@ if ! is_local_url "$url"; then
 	exit 2
 fi
 
-if command -v open >/dev/null 2>&1; then
+if polinko_command_available open; then
 	if ! open "$url"; then
 		echo "Failed to launch local URL with open: $url" >&2
 		exit 1
 	fi
-elif command -v xdg-open >/dev/null 2>&1; then
+elif polinko_command_available xdg-open; then
 	if ! xdg-open "$url" >/dev/null 2>&1; then
 		echo "Failed to launch local URL with xdg-open: $url" >&2
 		exit 1

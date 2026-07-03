@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+_polinko_shell_command_common=${SHELL_COMMAND_COMMON_SCRIPT:-${script_dir:-./tools}/shell_command_common.sh}
+# shellcheck source=./tools/shell_command_common.sh
+. "$_polinko_shell_command_common"
+
 polinko_pid_is_positive_integer() {
 	_polinko_pid_value=$1
 	case "$_polinko_pid_value" in
@@ -28,38 +32,6 @@ polinko_pid_is_running() {
 			;;
 	esac
 	return 0
-}
-
-polinko_command_available() {
-	_polinko_command=$1
-	if command -v "$_polinko_command" >/dev/null 2>&1; then
-		return 0
-	fi
-	return 1
-}
-
-polinko_require_command() {
-	_polinko_command=$1
-	_polinko_context=${2:-runtime helper}
-	if polinko_command_available "$_polinko_command"; then
-		return 0
-	fi
-	echo "Missing required command for $_polinko_context: $_polinko_command" >&2
-	return 1
-}
-
-polinko_require_labeled_command() {
-	_polinko_command=$1
-	_polinko_label=$2
-	_polinko_context=${3:-runtime helper}
-	if polinko_command_available "$_polinko_command"; then
-		return 0
-	fi
-	printf "%s: missing %s command: %s\n" \
-		"$_polinko_context" \
-		"$_polinko_label" \
-		"$_polinko_command" >&2
-	return 1
 }
 
 polinko_require_process_inspection() {
