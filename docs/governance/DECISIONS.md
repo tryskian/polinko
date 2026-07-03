@@ -6619,3 +6619,19 @@ or branch history instead.
 - Why: Blank readiness overrides should fail through the same direct operator
   diagnostics as malformed values, instead of silently using default readiness
   bounds.
+
+## D-393: Preserve explicit blank server-daemon start config as invalid
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `server-daemon`, `runtime`, `readiness`, `operator_hygiene`, `config`
+- Human-led: The human lead asked for hidden runner scripts to stay precise and
+  for small config gaps to be resolved as they are found.
+- Engineer implementation: Update `tools/run_server_daemon.sh` so launch port,
+  health URL, repo-slug, and readiness config default only when unset, then add
+  focused blank-config regressions.
+- Decision: Server-daemon start config treats unset config as defaulted, while
+  explicit blank config fails before launch or repo-scoped state derivation.
+- Why: Blank server-daemon overrides should fail through the same direct
+  operator diagnostics as malformed values, instead of silently using default
+  launch, health, identity, or readiness bounds.

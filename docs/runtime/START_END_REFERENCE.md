@@ -104,6 +104,8 @@ Runner lifecycle rule:
     reports repo context plus PID/log paths before liveness
   - explicit `SERVER_REPO_SLUG` config is validated before repo-scoped
     PID/log paths are derived
+  - launch port, health URL, repo-slug, and readiness config uses defaults only
+    when unset; explicit blank config fails before launch or state derivation
   - matching local `uvicorn server:app` processes without PID files are
     adopted on start, surfaced by status, and stopped during closeout recovery
   - matching servers that remain active after startup readiness failure, stop

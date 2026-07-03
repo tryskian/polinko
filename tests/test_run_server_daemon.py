@@ -98,6 +98,18 @@ class RunServerDaemonTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("DEV_BACKEND_PORT must be", result.stderr)
 
+    def test_rejects_empty_port_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "DEV_BACKEND_PORT": ""},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("DEV_BACKEND_PORT must be", result.stderr)
+
     def test_rejects_invalid_readiness_bounds_before_start(self) -> None:
         result = subprocess.run(
             ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
@@ -110,6 +122,33 @@ class RunServerDaemonTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("SERVER_START_ATTEMPTS must be a positive integer", result.stderr)
 
+    def test_rejects_empty_readiness_attempts_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "SERVER_START_ATTEMPTS": ""},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("SERVER_START_ATTEMPTS must be a positive integer", result.stderr)
+
+    def test_rejects_empty_readiness_sleep_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "SERVER_START_SLEEP_SECONDS": ""},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "SERVER_START_SLEEP_SECONDS must be a non-negative decimal number",
+            result.stderr,
+        )
+
     def test_rejects_empty_repo_slug_before_state_derivation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -121,6 +160,29 @@ class RunServerDaemonTests(unittest.TestCase):
                 env={
                     **os.environ,
                     "SERVER_REPO_SLUG": "  ",
+                    "SERVER_RUNTIME_ROOT": str(runtime_root),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "SERVER_REPO_SLUG must be a non-empty repo slug", result.stderr
+            )
+            self.assertFalse(runtime_root.exists())
+
+    def test_rejects_blank_repo_slug_before_state_derivation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            runtime_root = tmp_path / "runtime"
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "SERVER_REPO_SLUG": "",
                     "SERVER_RUNTIME_ROOT": str(runtime_root),
                 },
                 capture_output=True,
@@ -153,6 +215,30 @@ class RunServerDaemonTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 1)
             self.assertIn("SERVER_HEALTH_URL port must match 8781", result.stderr)
+            self.assertFalse((tmp_path / "server.pid").exists())
+
+    def test_rejects_empty_health_url_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "DEV_BACKEND_PORT": "8781",
+                    "SERVER_HEALTH_URL": "",
+                    "SERVER_PID_FILE": str(tmp_path / "server.pid"),
+                    "SERVER_LOG": str(tmp_path / "server.log"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "SERVER_HEALTH_URL must include an explicit port", result.stderr
+            )
             self.assertFalse((tmp_path / "server.pid").exists())
 
     def test_start_rejects_invalid_launcher_python_before_launch(self) -> None:
