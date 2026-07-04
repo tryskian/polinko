@@ -14,17 +14,18 @@ flowchart TD
   A["Talk first"] --> B["Align active kernel"]
   B --> C["Confirm source, scope, and success shape"]
   C --> D["Inspect live repo state"]
-  D --> E["Choose smallest coherent refactor slice"]
-  E --> F["Implement on feature branch"]
-  F --> G["Run focused validation"]
-  G --> H{"Pass?"}
-  H -->|"Yes"| I["Update docs, decisions, and handoff if needed"]
-  H -->|"No"| J["Diagnose from evidence"]
-  J --> F
-  I --> K["Checkpoint, PR, and merge path"]
-  K --> L["Return to clean synced main"]
-  L --> M["Run closeout gate"]
-  M --> N["Next kernel"]
+  D --> E["Map ownership, overlap,\nand validation coverage"]
+  E --> F["Choose smallest coherent refactor slice"]
+  F --> G["Implement on feature branch"]
+  G --> H["Run focused validation"]
+  H --> I{"Pass?"}
+  I -->|"Yes"| J["Update docs, decisions, and handoff if needed"]
+  I -->|"No"| K["Diagnose from evidence"]
+  K --> G
+  J --> L["Checkpoint, PR, and merge path"]
+  L --> M["Return to clean synced main"]
+  M --> N["Run closeout gate"]
+  N --> O["Next kernel"]
 
   classDef source fill:#EEF4FB,stroke:#4E79A7,color:#1F1F1F;
   classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
@@ -32,11 +33,11 @@ flowchart TD
   classDef fail fill:#FBEEEE,stroke:#E15759,color:#1F1F1F;
   classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
 
-  class A,B,C,D,E,K,L,M,N bridge;
-  class F,I pass;
-  class G source;
-  class H evidence;
-  class J fail;
+  class A,B,C,D,E,F,L,M,N,O bridge;
+  class G,J pass;
+  class H source;
+  class I evidence;
+  class K fail;
 ```
 
 ## One Kernel Rule

@@ -32,6 +32,10 @@ evidence-preserving method work.
 - Prefer deterministic, testable changes.
 - Fail fast on config, auth, and runtime issues.
 - Inspect evidence before interpretation.
+- Audit live surfaces before edits:
+  - current files outrank memory
+  - identify ownership, overlap, and validation coverage
+  - treat overlapping scripts, docs, and checks as refactor risk
 - Use read-only inventory/status tooling before high-impact eval refreshes.
 - Preserve evidence chains:
   - archive before delete

@@ -6668,3 +6668,20 @@ or branch history instead.
 - Why: Operator command safety belongs in maintained checks, so repeated shell
   quoting failures produce a local gate failure before they reach PR or
   closeout surfaces.
+
+## D-396: Audit live surfaces before edits
+
+- Date: `2026-07-03`
+- Category: `method`
+- Tags: `refactor`, `method`, `repo_state`, `operator_hygiene`
+- Human-led: The human lead clarified that refactor work must audit the live
+  repo surface before implementation because each commit changes ownership,
+  overlap, and validation shape.
+- Engineer implementation: Add the live-surface audit rule to `CHARTER` and
+  the refactor operating-loop diagram so future kernels inspect current files,
+  ownership, overlap, and validation coverage before editing.
+- Decision: Current repo files are the active source before edits; memory helps
+  route work, while live surface audit determines the implementation slice.
+- Why: Passing commands can still hide overlapping scripts, docs, or checks.
+  Treating overlap as refactor risk keeps Polinko attached to the current repo
+  instead of a stale mental model.
