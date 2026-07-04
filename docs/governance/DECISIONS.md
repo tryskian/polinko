@@ -6685,3 +6685,19 @@ or branch history instead.
 - Why: Passing commands can still hide overlapping scripts, docs, or checks.
   Treating overlap as refactor risk keeps Polinko attached to the current repo
   instead of a stale mental model.
+
+## D-397: Slot logged research-prompt evals into the refactor journey
+
+- Date: `2026-07-04`
+- Category: `evidence_governance`
+- Tags: `manual_evals`, `research_evidence`, `diagrams`, `roadmap`
+- Human-led: The human lead clarified that the logged eval surface itself,
+  not a specific question prompt, should be slotted into the refactor roadmap
+  before implementation.
+- Engineer implementation: Add a public refactor-journey lane and queued
+  roadmap note mapping research prompts through runtime response, database
+  row, human review, and evidence note.
+- Decision: Logged research-prompt evals are a queued bridge surface between
+  manual eval workbench evidence and promoted research surfaces.
+- Why: This makes "ask Polinko" a repeatable evidence workflow before theory,
+  folio, or grant surfaces derive from it.

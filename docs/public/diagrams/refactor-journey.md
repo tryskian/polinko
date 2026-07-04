@@ -4,7 +4,7 @@
 
 These diagrams show the refactor journey by lane: first evidence baseline,
 runtime/package movement, automation-backed contracts, manual-eval workbench
-preservation, and documentation pocket routing.
+preservation, logged research-prompt evals, and documentation pocket routing.
 
 ## Refactor Journey: Evidence First
 
@@ -104,6 +104,31 @@ flowchart TD
   class B,C evidence;
   class D,E,F,G bridge;
   class H pass;
+```
+
+## Refactor Journey: Logged Research-Prompt Eval Bridge
+
+![Refactor Journey: Logged Research-Prompt Eval Bridge](refactor-journey-logged-research-prompt-eval-bridge.svg)
+
+```mermaid
+flowchart TD
+  A["Manual eval workbench\nand runtime history"] --> B["Reusable research prompt packet"]
+  B --> C["Polinko runtime response\nthrough active backend"]
+  C --> D["Database-backed eval row:\nprompt\nresponse\nmetadata"]
+  D --> E["Human review:\npass/fail or notes"]
+  E --> F["Evidence note:\nsource pointer\nreview state"]
+  F --> G["Promoted research surfaces:\ntheory map\nfolio\nfuture grants"]
+  G --> H["Next portability lane:\nbackend-neutral eval packet"]
+
+  classDef source fill:#EEF4FB,stroke:#4E79A7,color:#1F1F1F;
+  classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
+  classDef pass fill:#EEF7EE,stroke:#59A14F,color:#1F1F1F;
+  classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
+
+  class A,B source;
+  class C,D bridge;
+  class E,F evidence;
+  class G,H pass;
 ```
 
 ## Refactor Journey: Documentation Pockets

@@ -40,4 +40,5 @@ that generate them.
 - [Refactor Journey: Runtime Package Boundary](refactor-journey-runtime-package-boundary.svg)
 - [Refactor Journey: Automation-Backed Contracts](refactor-journey-automation-backed-contracts.svg)
 - [Refactor Journey: Manual Eval Workbench](refactor-journey-manual-eval-workbench.svg)
+- [Refactor Journey: Logged Research-Prompt Eval Bridge](refactor-journey-logged-research-prompt-eval-bridge.svg)
 - [Refactor Journey: Documentation Pockets](refactor-journey-documentation-pockets.svg)
