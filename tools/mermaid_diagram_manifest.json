@@ -11,6 +11,7 @@
   "refactor-journey-automation-backed-contracts": "641bf7251980b5661a09714a39ead06e25a628f68519649780459bb38bcd592b",
   "refactor-journey-documentation-pockets": "ad385a43ce44b13495fc430989c7756cd0acf49ec17672f91296a602ffc85b10",
   "refactor-journey-evidence-first": "e5d0a05487133f45b2e60b6dbdf8a8c90286002da76d81f45873ddcb3d47963f",
+  "refactor-journey-logged-research-prompt-eval-bridge": "7296b91f98e114e99d3814ef2102125b003524c7e9b3dafbe68c942e87130914",
   "refactor-journey-manual-eval-workbench": "8156747b665c54197a0f99fc0c7a39aedd6d80d54bca99478cc55a4ebcb97a96",
   "refactor-journey-runtime-package-boundary": "34ab1aa7a1a729ac836bf03d56988c7b5477fa911250fff9ada5833c6dea054a",
   "refactor-operating-loop": "972e4b8a5d9a4992f8b5c123e0886bffd8b7ccf33363dd4fb84294c9ca8047b9",

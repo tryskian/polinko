@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-07-03
+Last updated: 2026-07-04
 
 ## Current Truth
 
@@ -58,6 +58,9 @@ Last updated: 2026-07-03
     status note
   - the root README includes a short refactor map that points readers to the
     public method and journey diagrams
+  - the public refactor journey diagrams include the logged research-prompt
+    eval bridge from prompt packet through runtime response, database row,
+    human review, and evidence note
   - the public status badge set distinguishes the Polinko research model,
     active model refactor, eval contract, research surface, and CI status
   - the root README points to public research docs and keeps public navigation
