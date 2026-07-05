@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-07-04
+Last updated: 2026-07-05
 
 ## Current Truth
 
@@ -39,6 +39,9 @@ Last updated: 2026-07-04
   - tracked docs, code, tests, and reports are canonical truth
   - public-facing writing is the derived publication layer from repo truth
   - local/private material stays in `docs/peanut/`
+  - Polinkofolio R&D source mapping stays in the local/private planning lane
+    and records source pointers, insight candidates, provenance, and cautions
+    before any public field-note promotion
 - Refactor method is human-led:
   - the human lead owns scope, method, acceptance, and go/no-go decisions
   - Codex owns implementation, validation, Git/PR flow, and hygiene execution
