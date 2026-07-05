@@ -109,8 +109,8 @@ notes, exports, and runtime history.
     context and whose source response asked for new image evidence with
     `make manual-evals-no-context-reclassify-preview`
   - apply that reclassification with
-    `make manual-evals-no-context-reclassify-apply
-    CONFIRM=manual-evals-no-context-reclassify`
+    `make manual-evals-no-context-reclassify-apply` and
+    `CONFIRM=manual-evals-no-context-reclassify`
   - overlay reclassification preserves the row as overlay-assisted OCR
     hypothesis evidence, keeps feedback open, writes a backup under
     `.local_archive/manual-evals-feedback-no-context-*`, and limits mutation
