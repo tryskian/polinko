@@ -57,6 +57,8 @@ _virtualenv.py
 .local/logs/
 .local/legacy_eval/
 .local/notebooks/
+.local/polinkofolio-mockups/**
+!.local/polinkofolio-mockups/.gitkeep
 .local_archive/
 
 # Local eval artifacts
