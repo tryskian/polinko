@@ -8,11 +8,11 @@
     "typecheck:pyright": "pyright --project pyrightconfig.json"
   },
   "devDependencies": {
-    "@mermaid-js/mermaid-cli": "11.15.0",
+    "@mermaid-js/mermaid-cli": "11.16.0",
     "d3": "7.9.0",
     "d3-sankey": "0.12.3",
     "jsdom": "29.1.1",
-    "markdownlint-cli2": "0.22.1",
+    "markdownlint-cli2": "0.23.0",
     "pyright": "1.1.411"
   },
   "overrides": {
