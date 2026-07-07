@@ -15,10 +15,10 @@ Source transcript:
 
 Excerpts preserve source wording; transcript edits are selection-only.
 
-This exchange captures Polinko explaining what it researches: safe human-AI
+In this exchange, we ask Polinko to explain what it researches: safe human-AI
 interaction as a problem of structure, source fidelity, binary gates, failure,
 and correction. The value is not that every answer is perfect. The value is
-that the conversation shows the method working.
+that we can see the method working through the conversation.
 
 ## Draft Status
 
@@ -30,7 +30,7 @@ excluded, and selected excerpts kept in source wording.
 
 ### What Polinko Researches
 
-The first useful answer starts broad: Polinko describes itself as a controlled
+We start broad, asking Polinko to describe itself as a controlled
 conversational system before the later sections sharpen the method.
 
 **Krystian:**
@@ -52,8 +52,8 @@ dialogue.
 
 ### Why Anthropomorphism Matters
 
-The exchange moves from anthropomorphism into safe interaction as predictable
-reasoning under constraint and correction.
+We move from anthropomorphism into safe interaction as predictable reasoning
+under constraint and correction.
 
 **Krystian:**
 
@@ -101,7 +101,7 @@ trusted, but *limited enough* not to trick you into thinking they’re sentient.
 
 ### Why Binary Gates Matter
 
-Krystian names the PASS/FAIL structure, then asks why binary evaluation fits the
+We name the PASS/FAIL structure, then ask why binary evaluation fits the
 model's reasoning.
 
 **Krystian:**
@@ -137,8 +137,8 @@ constraints are crisp, and deviations stand out instantly for measurement.
 
 ### Why Dialogue Is the Method
 
-The strongest self-description comes after Krystian asks for a plain-language
-explanation, then pushes the evaluation answer back toward the working method.
+We ask for a plain-language explanation, then push the evaluation answer back
+toward the working method.
 
 **Krystian:**
 
@@ -188,7 +188,7 @@ Essentially, we’re co‑testing language as both subject *and* lab instrument.
 
 ### What Signal Counts
 
-The final prompt distills the valued signal: reliability as consistency under
+We close by asking which signal matters: reliability as consistency under
 constraint.
 
 **Krystian:**

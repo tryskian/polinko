@@ -27,7 +27,16 @@ def _run(script: Path, cwd: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _base_transcript(insights: str = "") -> str:
+def _base_transcript(
+    insights: str = "",
+    *,
+    identifier_lines: list[str] | None = None,
+    transcript_lines: list[str] | None = None,
+) -> str:
+    transcript_body = transcript_lines or [
+        "human: hello",
+        "assistant: hello",
+    ]
     parts = [
         "# Example Transcript",
         "",
@@ -36,12 +45,12 @@ def _base_transcript(insights: str = "") -> str:
         "Identifiers:",
         "",
         "- id: example",
+        *(identifier_lines or []),
         "",
         "## Transcript (Verbatim Block)",
         "",
         "```text",
-        "human: hello",
-        "assistant: hello",
+        *transcript_body,
         "```",
     ]
     if insights:
@@ -124,6 +133,37 @@ class TranscriptCloseoutTests(unittest.TestCase):
         self.assertIn("transcript-check: FAIL", result.stdout)
         self.assertIn("structured insights missing distillation heading", result.stdout)
         self.assertIn("structured insights must include at least two H3", result.stdout)
+
+    def test_validate_fails_when_source_fidelity_marker_was_stripped(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write(
+                root,
+                "docs/peanut/transcripts/co_reasoning/example.md",
+                _base_transcript(
+                    VALID_INSIGHTS,
+                    identifier_lines=[
+                        "- `source_fidelity_markers`:",
+                        "  - `1. **Sidecar 1: read-only map**`",
+                    ],
+                    transcript_lines=[
+                        "assistant: For manual eval rebuild, I’d structure it like:",
+                        "",
+                        "1. Sidecar 1: read-only map",
+                        "   Map current manual-eval wiring. No edits.",
+                    ],
+                ),
+            )
+
+            result = _run(VALIDATE_SCRIPT, root)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("transcript-check: FAIL", result.stdout)
+        self.assertIn(
+            "verbatim transcript missing source fidelity marker(s): "
+            "`1. **Sidecar 1: read-only map**`",
+            result.stdout,
+        )
 
     def test_fix_inserts_default_insights_then_validate_passes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
