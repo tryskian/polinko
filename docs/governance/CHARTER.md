@@ -30,6 +30,10 @@ evidence-preserving method work.
 - Failure is primary signal:
   - pass-rate reporting keeps unresolved failure pressure visible
 - Prefer deterministic, testable changes.
+- Convert manual misses into checks:
+  - if a defect is noticed manually and belongs to an existing validation gate,
+    add it to that gate
+  - if no gate exists, name the closest owner before closing the kernel
 - Fail fast on config, auth, and runtime issues.
 - Inspect evidence before interpretation.
 - Audit live surfaces before edits:
@@ -84,6 +88,10 @@ evidence-preserving method work.
   - curated tracked research notes
 - `docs/peanut/`
   - local-only exploration lane
+- Tracked Markdown style:
+  - use standard wrapped line breaks for authored prose
+  - keep literal syntax intact for commands, code, tables, paths, URLs,
+    Mermaid, and source excerpts where line structure is evidence
 
 ## Current Scope
 

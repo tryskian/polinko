@@ -6701,3 +6701,35 @@ or branch history instead.
   manual eval workbench evidence and promoted research surfaces.
 - Why: This makes "ask Polinko" a repeatable evidence workflow before theory,
   folio, or grant surfaces derive from it.
+
+## D-398: Keep authored Markdown line-wrapped
+
+- Date: `2026-07-06`
+- Category: `docs_hygiene`
+- Tags: `markdown`, `docs_hygiene`, `diff_hygiene`, `source_truth`
+- Human-led: The human lead asked to add the standard Markdown line-break
+  convention to the contract after seeing why the wrapped style matters.
+- Engineer implementation: Add the rule to `CHARTER` and `RUNBOOK`, and apply
+  it to the active Polinkofolio draft pass.
+- Decision: Authored Markdown prose uses standard wrapped line breaks.
+  Commands, code blocks, tables, paths, URLs, Mermaid, and source excerpts
+  keep literal structure when wrapping would change meaning or evidence.
+- Why: Wrapped Markdown keeps source diffs reviewable while preserving the
+  repo's source-led documentation style.
+
+## D-399: Convert manual misses into validation checks
+
+- Date: `2026-07-07`
+- Category: `method`
+- Tags: `validation`, `operator_hygiene`, `tests`, `checks`,
+  `source_truth`
+- Human-led: The human lead clarified that anything manually noticed but not
+  identified by a script should be added to the check it belongs in.
+- Engineer implementation: Add the rule to `CHARTER`; use the transcript
+  fidelity-marker regression as the current example of promoting a manual
+  notice into `transcript-check`.
+- Decision: Manual findings that expose checker blind spots become scripted
+  assertions in the relevant validation layer. If no existing gate owns the
+  finding, identify the nearest owner before closing the kernel.
+- Why: Repeated quality catches should not depend on operator memory. The repo
+  should fail locally when a known class of mistake recurs.
