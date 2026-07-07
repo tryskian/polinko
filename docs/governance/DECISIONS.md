@@ -6701,3 +6701,18 @@ or branch history instead.
   manual eval workbench evidence and promoted research surfaces.
 - Why: This makes "ask Polinko" a repeatable evidence workflow before theory,
   folio, or grant surfaces derive from it.
+
+## D-398: Keep authored Markdown line-wrapped
+
+- Date: `2026-07-06`
+- Category: `docs_hygiene`
+- Tags: `markdown`, `docs_hygiene`, `diff_hygiene`, `source_truth`
+- Human-led: The human lead asked to add the standard Markdown line-break
+  convention to the contract after seeing why the wrapped style matters.
+- Engineer implementation: Add the rule to `CHARTER` and `RUNBOOK`, and apply
+  it to the active Polinkofolio draft pass.
+- Decision: Authored Markdown prose uses standard wrapped line breaks.
+  Commands, code blocks, tables, paths, URLs, Mermaid, and source excerpts
+  keep literal structure when wrapping would change meaning or evidence.
+- Why: Wrapped Markdown keeps source diffs reviewable while preserving the
+  repo's source-led documentation style.

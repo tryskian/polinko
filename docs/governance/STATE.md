@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 ## Current Truth
 
@@ -42,6 +42,11 @@ Last updated: 2026-07-06
   - Polinkofolio R&D source mapping stays in the local/private planning lane
     and records source pointers, insight candidates, provenance, and cautions
     before any public field-note promotion
+  - `docs/polinkofolio/drafts/polinko-self-description.md` is an active
+    Polinkofolio transcript-selection draft centred on Polinko explaining its
+    research model; it points to the curated local primary-source note under
+    `docs/peanut/transcripts/eval_policy/` and the hidden raw export under
+    `.local/eval_cases/exports/`
 - Refactor method is human-led:
   - the human lead owns scope, method, acceptance, and go/no-go decisions
   - Codex owns implementation, validation, Git/PR flow, and hygiene execution
@@ -55,6 +60,9 @@ Last updated: 2026-07-06
   - closeout progress derives from the declared `make end` step labels and
     explicit step dispatch so displayed counts stay aligned with the checks
     that actually run
+  - tracked Markdown authoring uses standard wrapped line breaks for authored
+    prose while preserving literal command, code, table, path, URL, Mermaid,
+    and evidence line structure where wrapping would change meaning
 - Public-facing surfaces remain derived from repo truth:
   - the root README now names the Polinko research model as staged for the
     next beta, replacing generic maintenance framing with a model-refactor
@@ -989,6 +997,9 @@ Last updated: 2026-07-06
   - `make end-docs-check` verifies `STATE` and local `SESSION_HANDOFF` date
     freshness; when local `SESSION_HANDOFF` exists, it must also mention the
     current commit so same-date stale handoffs fail closeout
+  - authored Markdown prose uses standard wrapped line breaks; literal syntax
+    and source evidence structure stay intact when wrapping would change
+    meaning
 
 ## Active Priorities
 
