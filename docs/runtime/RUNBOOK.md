@@ -60,7 +60,8 @@ Use this doc for operator procedure.
    - `git branch --show-current`
 5. If on `main`, create or switch to a feature branch before edits.
 6. Reply in the morning ritual before implementation:
-   - context: printed repo root, host vs devcontainer mode, active branch, clean `main` or feature branch, and runtime health
+   - context: printed repo root, host vs devcontainer mode, active branch,
+     clean `main` or feature branch, and runtime health
    - kernel map: likely lanes from current docs/state, with one
      recommended first kernel
    - startup note: one small issue or risk only if something needs attention
@@ -93,6 +94,14 @@ Use this doc for operator procedure.
    it before interpretation.
 2. Use source evidence as the basis for interpretation.
 3. State inspection status plainly.
+
+## Markdown Authoring Rule
+
+1. Use standard wrapped Markdown line breaks for authored prose.
+2. Preserve literal syntax for commands, code blocks, tables, paths, URLs,
+   Mermaid, and source excerpts where line structure is evidence.
+3. Treat wrapping as source hygiene: it should make diffs easier to review
+   without changing wording, commands, or evidence.
 
 ## Command Ownership
 

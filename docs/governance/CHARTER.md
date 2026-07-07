@@ -84,6 +84,10 @@ evidence-preserving method work.
   - curated tracked research notes
 - `docs/peanut/`
   - local-only exploration lane
+- Tracked Markdown style:
+  - use standard wrapped line breaks for authored prose
+  - keep literal syntax intact for commands, code, tables, paths, URLs,
+    Mermaid, and source excerpts where line structure is evidence
 
 ## Current Scope
 
