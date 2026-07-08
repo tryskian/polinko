@@ -39,18 +39,12 @@ Last updated: 2026-07-08
   - tracked docs, code, tests, and reports are canonical truth
   - public-facing writing is the derived publication layer from repo truth
   - local/private material stays in `docs/peanut/`
-  - Polinkofolio R&D source mapping stays in the local/private planning lane
-    and records source pointers, insight candidates, provenance, and cautions
-    before any public field-note promotion
-  - a standalone Polinkofolio scaffold exists in the sibling `polinkofolio`
-    repo; Polinko remains the canonical source system, and any move of active
-    Polinkofolio work into that repo should be recorded as a Polinko decision
-    before source surfaces are migrated
-  - `docs/polinkofolio/drafts/polinko-self-description.md` is an active
-    Polinkofolio transcript-selection draft centred on Polinko explaining its
-    research model; it points to the curated local primary-source note under
-    `docs/peanut/transcripts/eval_policy/` and the hidden raw export under
-    `.local/eval_cases/exports/`
+  - active Polinkofolio work lives in the private standalone
+    `tryskian/polinkofolio` repo
+  - former Polinko-side Polinkofolio draft and scaffold surfaces are archived
+    under `.archive/quarantine/polinkofolio-2026-07-08/`
+  - Polinko remains the canonical research system and source of truth for
+    runtime, eval, and evidence work
 - Refactor method is human-led:
   - the human lead owns scope, method, acceptance, and go/no-go decisions
   - Codex owns implementation, validation, Git/PR flow, and hygiene execution
