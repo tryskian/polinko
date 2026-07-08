@@ -6807,3 +6807,19 @@ or branch history instead.
   durable PR body files.
 - Why: This keeps D-401's shell-safe `--body-file` contract while removing the
   temp-file cleanup chore from normal PR closeout.
+
+## D-404: Add diagnostic test timing surface
+
+- Date: `2026-07-08`
+- Category: `runtime_tooling`
+- Tags: `tests`, `timing`, `ci`, `make`, `operator_hygiene`
+- Human-led: The human lead asked whether the large test suite has
+  streamlining opportunities and reinforced that inefficiency should be
+  identified by the engineering layer.
+- Engineer implementation: Add `make test-timing` as a pytest duration
+  diagnostic, keep `make test` on unittest discovery, update runtime docs, and
+  add Makefile contract coverage for the new target.
+- Decision: Test timing telemetry is a separate diagnostic operator surface.
+  The canonical suite gate remains `make test`.
+- Why: The repo needs evidence about slow pockets before changing CI topology
+  or splitting lifecycle tests into slower lanes.

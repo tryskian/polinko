@@ -553,6 +553,9 @@ Use this doc for operator procedure.
   - mypy check for active `src/` and `tools/` Python surfaces
 - `make test`
   - test suite
+- `make test-timing`
+  - diagnostic test duration report; `make test` remains the canonical suite
+    gate
 - `make ci`
   - local aggregate of the named GitHub CI job targets:
     `ci-docs`, `ci-python-style`, `ci-python-type-check`, `ci-package`,
