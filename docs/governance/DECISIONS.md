@@ -6858,3 +6858,20 @@ or branch history instead.
 - Why: CI no longer reruns every leaf job or installs unused Node dependencies
   inside the build-hygiene job, while local preflight remains strict and
   one-command.
+
+## D-407: Cache Python dependency installs in CI
+
+- Date: `2026-07-08`
+- Category: `ci_efficiency`
+- Tags: `ci`, `dependencies`, `pip`, `requirements`, `operator_hygiene`
+- Human-led: The human lead asked for CI/test efficiency work without reducing
+  check strictness.
+- Engineer implementation: Add `actions/setup-python` pip caching to GitHub CI
+  jobs that install `requirements.txt`, keyed by `requirements.txt`; keep the
+  docs-only Python setup job uncached for pip; and add contract coverage for
+  the cache shape.
+- Decision: Python dependency-install jobs in GitHub CI restore pip cache from
+  the generated lockfile surface, `requirements.txt`.
+- Why: The CI topology now separates leaf jobs cleanly, so the next efficiency
+  step is reducing repeated locked dependency installation while preserving the
+  same commands and gates.
