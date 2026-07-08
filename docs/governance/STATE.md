@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-07-07
+Last updated: 2026-07-08
 
 ## Current Truth
 
@@ -42,6 +42,10 @@ Last updated: 2026-07-07
   - Polinkofolio R&D source mapping stays in the local/private planning lane
     and records source pointers, insight candidates, provenance, and cautions
     before any public field-note promotion
+  - a standalone Polinkofolio scaffold exists in the sibling `polinkofolio`
+    repo; Polinko remains the canonical source system, and any move of active
+    Polinkofolio work into that repo should be recorded as a Polinko decision
+    before source surfaces are migrated
   - `docs/polinkofolio/drafts/polinko-self-description.md` is an active
     Polinkofolio transcript-selection draft centred on Polinko explaining its
     research model; it points to the curated local primary-source note under
