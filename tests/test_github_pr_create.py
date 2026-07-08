@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import pty
 import subprocess
 import tempfile
 import unittest
@@ -97,6 +98,118 @@ class GitHubPrCreateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("--body-file is required", result.stderr)
 
+    def test_helper_routes_quoted_stdin_through_body_file_dash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            fake_gh = tmp_path / "gh"
+            captured_args = tmp_path / "args.txt"
+            fake_gh.write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        'printf "%s\\n" "$@" >"$POLINKO_CAPTURE_ARGS"',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            fake_gh.chmod(0o755)
+            env = {**os.environ, "POLINKO_CAPTURE_ARGS": str(captured_args)}
+
+            result = subprocess.run(
+                [
+                    str(SCRIPT),
+                    "--gh",
+                    str(fake_gh),
+                    "--base",
+                    "main",
+                    "--head",
+                    "codex/bigbrain/example",
+                    "--title",
+                    "Safe stdin PR body",
+                    "--body-file",
+                    "-",
+                ],
+                cwd=REPO_ROOT,
+                env=env,
+                input="Summary with `literal code span` in Markdown.\n",
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            captured = captured_args.read_text(encoding="utf-8").splitlines()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            captured,
+            [
+                "pr",
+                "create",
+                "--base",
+                "main",
+                "--head",
+                "codex/bigbrain/example",
+                "--title",
+                "Safe stdin PR body",
+                "--body-file",
+                "-",
+            ],
+        )
+
+    def test_helper_rejects_interactive_body_file_dash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            fake_gh = tmp_path / "gh"
+            captured_args = tmp_path / "args.txt"
+            fake_gh.write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        'printf "%s\\n" "$@" >"$POLINKO_CAPTURE_ARGS"',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            fake_gh.chmod(0o755)
+            env = {**os.environ, "POLINKO_CAPTURE_ARGS": str(captured_args)}
+            master_fd, slave_fd = pty.openpty()
+            try:
+                process = subprocess.Popen(
+                    [
+                        str(SCRIPT),
+                        "--gh",
+                        str(fake_gh),
+                        "--base",
+                        "main",
+                        "--head",
+                        "codex/bigbrain/example",
+                        "--title",
+                        "Interactive stdin",
+                        "--body-file",
+                        "-",
+                    ],
+                    cwd=REPO_ROOT,
+                    env=env,
+                    stdin=slave_fd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+                os.close(slave_fd)
+                slave_fd = -1
+                _, stderr = process.communicate(timeout=5)
+            finally:
+                if slave_fd != -1:
+                    os.close(slave_fd)
+                os.close(master_fd)
+
+        self.assertEqual(process.returncode, 2)
+        self.assertIn("--body-file - requires piped stdin", stderr)
+        self.assertFalse(captured_args.exists())
+
     def test_make_target_uses_safe_helper_not_inline_body(self) -> None:
         make_text = "\n".join(
             [
@@ -131,6 +244,8 @@ class GitHubPrCreateTests(unittest.TestCase):
 
         self.assertIn("make github-pr-create", docs_text)
         self.assertIn("GITHUB_PR_BODY_FILE", docs_text)
+        self.assertIn("GITHUB_PR_BODY_FILE=-", docs_text)
+        self.assertIn("<<'PR_BODY'", docs_text)
         self.assertIn("`--body-file`", docs_text)
 
 

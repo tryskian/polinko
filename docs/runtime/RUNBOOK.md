@@ -128,9 +128,10 @@ Use this doc for operator procedure.
    - `make pr-preflight`
 4. Push the branch.
 5. Open a PR to `main` through the safe body-file path:
-   - write the Markdown body to `.local/pr_body.md` or pass stdin through a
-     quoted heredoc
-   - `GITHUB_PR_HEAD=<branch> GITHUB_PR_TITLE=<title> GITHUB_PR_BODY_FILE=.local/pr_body.md make github-pr-create`
+   - pass one-off Markdown bodies through quoted stdin:
+     `GITHUB_PR_HEAD=<branch> GITHUB_PR_TITLE=<title> GITHUB_PR_BODY_FILE=- make github-pr-create <<'PR_BODY'`
+   - put the Markdown body on the following lines, then close with `PR_BODY`
+   - use a readable file path only for durable PR body files
    - PR Markdown, code spans, and backticks go through `--body-file`; inline
      shell-quoted PR body strings are not a maintained operator path
 6. Wait for required checks.
