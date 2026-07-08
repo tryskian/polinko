@@ -6733,3 +6733,22 @@ or branch history instead.
   finding, identify the nearest owner before closing the kernel.
 - Why: Repeated quality catches should not depend on operator memory. The repo
   should fail locally when a known class of mistake recurs.
+
+## D-400: Run path-leak guard inside closeout-doc freshness
+
+- Date: `2026-07-08`
+- Category: `docs_hygiene`
+- Tags: `closeout`, `path_leak`, `docs_hygiene`, `pr_preflight`,
+  `operator_hygiene`
+- Human-led: The human lead asked to investigate a failed closeout PR run and
+  prevent the same mistake from reaching CI again.
+- Engineer implementation: Make `make end-docs-check` depend on
+  `make path-leak-check`, then add a Make contract regression for the
+  dependency.
+- Decision: The focused closeout-doc freshness gate also runs the tracked
+  path-leak guard before the date and handoff freshness script.
+- Why: The failed PR was caused by a tracked current-truth doc containing a
+  local absolute path. `make path-leak-check` already owned the defect class,
+  but the narrow closeout-doc command used before PR creation did not invoke
+  it. Wiring the guard into `end-docs-check` makes the local command fail
+  before a closeout-doc PR reaches GitHub.

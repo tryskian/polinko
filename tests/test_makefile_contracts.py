@@ -2381,6 +2381,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("startup-contracts-check", _phony_targets())
         self.assertRegex(text, r"(?m)^startup-contracts-check:$")
         self.assertIn("$(PYTHON) -m unittest tests.test_startup_contracts", text)
+        self.assertRegex(text, r"(?m)^end-docs-check:\s*path-leak-check$")
+        self.assertIn("$(PYTHON) -m tools.check_end_docs", text)
         self.assertIn("risk-scan", _phony_targets())
         self.assertRegex(text, r"(?m)^risk-scan:$")
         self.assertIn("$(PYTHON) -m tools.check_runtime_risk_scan", text)
