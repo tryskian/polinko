@@ -6838,3 +6838,23 @@ or branch history instead.
   failures and git diff remain the diagnostic evidence surfaces.
 - Why: The check stays strict while removing generated-lockfile output from
   successful local and CI runs.
+
+## D-406: Split CI core hygiene from the local aggregate gate
+
+- Date: `2026-07-08`
+- Category: `ci_topology`
+- Tags: `ci`, `make`, `build-hygiene`, `pr-preflight`, `operator_hygiene`
+- Human-led: The human lead asked for CI/test efficiency work without reducing
+  check strictness.
+- Engineer implementation: Add `make build-hygiene-core` for environment
+  doctor, transcript validation, and whitespace diff checks; keep local
+  `make build-hygiene` as the full aggregate over core hygiene plus `make ci`;
+  re-run whitespace diff checking after the local aggregate leaf gates; and
+  run the GitHub `build-hygiene` job against the core target beside leaf jobs
+  without Node setup.
+- Decision: GitHub CI owns leaf jobs for isolation and a separate core hygiene
+  job for non-leaf checks. Local PR readiness keeps the complete aggregate
+  through `make pr-preflight`.
+- Why: CI no longer reruns every leaf job or installs unused Node dependencies
+  inside the build-hygiene job, while local preflight remains strict and
+  one-command.

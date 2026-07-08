@@ -857,10 +857,13 @@ Last updated: 2026-07-08
     runs `make path-leak-check`, `make scripts-check`, `make risk-scan`,
     `make runtime-tool-reference-check`, and `make operator-command-check`
     before longer style, type, test, and security gates
-  - `make build-hygiene` is the PR-safe aggregate hygiene gate for
-    environment doctor, transcript validation, CI build/test/security/doc
-    gates, and whitespace diff checks; every PR runs it as a first-class CI job
-    and `make pr-preflight` provides the local readiness command
+  - `make build-hygiene-core` is the CI core hygiene gate for environment
+    doctor, transcript validation, and whitespace diff checks; GitHub CI runs
+    it beside the named leaf jobs instead of rerunning the full aggregate
+  - `make build-hygiene` is the local PR-safe aggregate gate for the core
+    hygiene target plus CI build/test/security/doc gates, repeats whitespace
+    diff checking after those gates, and `make pr-preflight` provides the local
+    readiness command
   - public diagram renderers use source-first, write-if-changed behaviour:
     Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
     through a temporary SVG before replacing the tracked artefact

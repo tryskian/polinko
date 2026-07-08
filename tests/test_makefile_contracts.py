@@ -3437,22 +3437,37 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("python-type-check:", workflow_text)
         self.assertIn("make ci-python-type-check PYTHON=python", workflow_text)
 
-    def test_build_hygiene_runs_ci_and_diff_whitespace_check(self) -> None:
+    def test_build_hygiene_splits_ci_core_from_local_aggregate(self) -> None:
         text = _makefile_contract_text()
         workflow_text = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(
             encoding="utf-8"
         )
 
+        self.assertRegex(text, r"(?m)^\.PHONY: .*\bbuild-hygiene-core\b")
+        self.assertRegex(
+            text,
+            r"(?m)^build-hygiene-core:\s*doctor-env transcript-check$",
+        )
         self.assertRegex(text, r"(?m)^\.PHONY: .*\bbuild-hygiene\b")
         self.assertRegex(
             text,
-            r"(?m)^build-hygiene:\s*doctor-env transcript-check ci$",
+            r"(?m)^build-hygiene:\s*build-hygiene-core ci$",
         )
-        self.assertRegex(text, r"(?m)^\s+git diff --check$")
+        self.assertRegex(
+            text,
+            r"(?m)^build-hygiene-core:\s*doctor-env transcript-check$\n\tgit diff --check",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^build-hygiene:\s*build-hygiene-core ci$\n\tgit diff --check",
+        )
         self.assertRegex(text, r"(?m)^\.PHONY: .*\bpr-preflight\b")
         self.assertRegex(text, r"(?m)^pr-preflight:\s*build-hygiene$")
         self.assertIn("build-hygiene:", workflow_text)
-        self.assertIn("make build-hygiene PYTHON=python", workflow_text)
+        self.assertIn("make build-hygiene-core PYTHON=python", workflow_text)
+        build_hygiene_job = workflow_text.split("  markdownlint:", maxsplit=1)[0]
+        self.assertNotIn("actions/setup-node", build_hygiene_job)
+        self.assertNotIn("npm ci", build_hygiene_job)
 
     def test_python_security_gate_keeps_narrow_no_fix_audit_exception(self) -> None:
         text = _makefile_contract_text()

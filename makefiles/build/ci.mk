@@ -1,7 +1,10 @@
 # CI aggregation and preflight targets.
-.PHONY: build-hygiene pr-preflight ci ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
+.PHONY: build-hygiene-core build-hygiene pr-preflight ci ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
 
-build-hygiene: doctor-env transcript-check ci
+build-hygiene-core: doctor-env transcript-check
+	git diff --check
+
+build-hygiene: build-hygiene-core ci
 	git diff --check
 
 pr-preflight: build-hygiene

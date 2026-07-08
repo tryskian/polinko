@@ -563,9 +563,13 @@ Use this doc for operator procedure.
 - `make deps-lock-check`
   - verifies the generated Python lockfile is current with concise clean-run
     output and git diff as the drift signal
+- `make build-hygiene-core`
+  - CI core hygiene target for environment doctor, transcript validation, and
+    whitespace diff checks
 - `make build-hygiene`
   - PR-safe build hygiene gate that runs `doctor-env`, `transcript-check`,
-    `make ci`, and `git diff --check`
+    `make ci`, and `git diff --check` through the core target plus named CI
+    leaf targets, then repeats the whitespace diff check after the leaf gates
 - `make pr-preflight`
   - local PR readiness command for `make build-hygiene`
 - `make github-health`

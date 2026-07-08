@@ -194,9 +194,11 @@ Active kernel validation:
     helper surfaces
 - Use `make runtime-tool-reference-check` when a kernel changes runtime,
   Make, CI, or docs references to `tools/*.py` or `tools/*.sh` helpers
-- Use `make build-hygiene` for the PR-safe hygiene gate that mirrors the
-  build, docs, dependency, test, transcript, environment, and whitespace
-  surfaces
+- Use `make build-hygiene-core` for the CI core hygiene gate that covers
+  environment, transcript, and whitespace surfaces
+- Use `make build-hygiene` for the local PR-safe aggregate gate over the core
+  hygiene target plus build, docs, dependency, and test surfaces; it repeats
+  the whitespace diff check after the leaf gates
 - Use `make pr-preflight` before publishing a PR as the local readiness command for
   `make build-hygiene`
 - Use `make github-pr-create` with `GITHUB_PR_BODY_FILE=-` and a quoted heredoc
