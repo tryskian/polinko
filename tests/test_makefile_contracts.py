@@ -2510,6 +2510,13 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("$(call repo_activity,make test-one,test-one)", text)
         self.assertIn("$(call repo_activity,make test-targeted,test-targeted)", text)
+        self.assertIn("TEST_TIMING_LIMIT ?= 30", text)
+        self.assertIn("TEST_TIMING_MIN ?= 0.1", text)
+        self.assertIn("$(call repo_activity,make test-timing,test-timing)", text)
+        self.assertIn(
+            '$(PYTHON) -m pytest tests --durations="$(TEST_TIMING_LIMIT)"',
+            text,
+        )
         self.assertRegex(text, r"(?m)^docs:\s*server-daemon$")
         self.assertRegex(text, r"(?m)^docs-open:\s*server-daemon$")
         self.assertNotRegex(text, r"(?m)^open-api-docs:")

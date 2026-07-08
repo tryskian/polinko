@@ -378,6 +378,8 @@ Last updated: 2026-07-08
     entrypoint at `makefiles/checks/dev-tools.mk`, while repo search,
     pre-commit, and local `act` helper fragments live under
     `makefiles/checks/dev-tools/`
+  - `make test-timing` is a diagnostic duration surface for test telemetry;
+    `make test` remains the canonical unittest suite gate
   - runtime audit targets keep the public entrypoint at
     `makefiles/checks/runtime-audits.mk`, while role-owned fragments live
     under `makefiles/checks/runtime-audits/` for shell helper audits, path
