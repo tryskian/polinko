@@ -797,8 +797,9 @@ Last updated: 2026-07-08
     heredoc bodies remain the supported path for printing literal Markdown code
     spans
   - PR body publication is explicit through `make github-pr-create`, backed by
-    `tools/github_pr_create.sh`; Markdown bodies with code spans or backticks
-    are passed through `--body-file` instead of inline shell-quoted strings
+    `tools/github_pr_create.sh`; one-off PR bodies use
+    `GITHUB_PR_BODY_FILE=-` with quoted stdin, and durable body files use a
+    readable file path
   - shell command availability and missing-command diagnostics live in
     `tools/shell_command_common.sh`; runtime shell helpers use this surface for
     Make, local browser opener, eval-case guard, and process lifecycle command

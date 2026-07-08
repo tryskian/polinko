@@ -6789,3 +6789,21 @@ or branch history instead.
   research system and source of truth for runtime, eval, and evidence work.
 - Why: Keeping Polinkofolio active inside Polinko made startup point to the
   wrong next lane after the dedicated repo had taken ownership.
+
+## D-403: Guard one-off PR bodies through quoted stdin
+
+- Date: `2026-07-08`
+- Category: `operator_workflow`
+- Tags: `pull_requests`, `shell`, `operator_hygiene`, `github`, `make`
+- Human-led: The human lead identified that the D-401 closeout path still left
+  a manual cleanup wrinkle when `.local/pr_body.md` was used as a temporary
+  one-off PR body file.
+- Engineer implementation: Guard `tools/github_pr_create.sh` so
+  `--body-file -` fails in interactive stdin, document quoted heredoc stdin as
+  the one-off PR body path, and add focused regression coverage for stdin and
+  interactive-stdin behavior.
+- Decision: One-off PR Markdown bodies use `GITHUB_PR_BODY_FILE=-` with a
+  quoted heredoc through `make github-pr-create`. File paths are reserved for
+  durable PR body files.
+- Why: This keeps D-401's shell-safe `--body-file` contract while removing the
+  temp-file cleanup chore from normal PR closeout.
