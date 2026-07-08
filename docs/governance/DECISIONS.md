@@ -6823,3 +6823,18 @@ or branch history instead.
   The canonical suite gate remains `make test`.
 - Why: The repo needs evidence about slow pockets before changing CI topology
   or splitting lifecycle tests into slower lanes.
+
+## D-405: Keep dependency lock checks concise on clean runs
+
+- Date: `2026-07-08`
+- Category: `operator_workflow`
+- Tags: `dependencies`, `lockfiles`, `ci`, `operator_hygiene`, `make`
+- Human-led: The human lead reinforced that warnings and output wrinkles are
+  maintenance issues, not acceptable background noise.
+- Engineer implementation: Capture `pip-compile` output in
+  `tools.run_dependency_lock`, emit it on compile failure, print concise
+  success status lines, and add focused regression coverage.
+- Decision: Clean dependency-lock checks use concise status output. Compile
+  failures and git diff remain the diagnostic evidence surfaces.
+- Why: The check stays strict while removing generated-lockfile output from
+  successful local and CI runs.

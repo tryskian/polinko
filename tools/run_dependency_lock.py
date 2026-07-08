@@ -7,6 +7,13 @@ import subprocess
 import sys
 
 
+def emit_process_output(result: subprocess.CompletedProcess[str]) -> None:
+    if result.stdout:
+        sys.stdout.write(result.stdout)
+    if result.stderr:
+        sys.stderr.write(result.stderr)
+
+
 def piptools_available(python: str) -> bool:
     result = subprocess.run(
         [python, "-m", "piptools", "--version"],
@@ -34,21 +41,28 @@ def compile_lockfile(
     requirements_in: str,
     requirements_lock: str,
 ) -> int:
+    args = [
+        python,
+        "-m",
+        "piptools",
+        "compile",
+        "--resolver=backtracking",
+        "--allow-unsafe",
+        "--strip-extras",
+        "--output-file",
+        requirements_lock,
+        requirements_in,
+    ]
     result = subprocess.run(
-        [
-            python,
-            "-m",
-            "piptools",
-            "compile",
-            "--resolver=backtracking",
-            "--allow-unsafe",
-            "--strip-extras",
-            "--output-file",
-            requirements_lock,
-            requirements_in,
-        ],
+        args,
+        capture_output=True,
         check=False,
+        text=True,
     )
+    if result.returncode != 0:
+        emit_process_output(result)
+        return result.returncode
+    print(f"dependency-lock: compiled {requirements_lock} from {requirements_in}")
     return result.returncode
 
 
@@ -87,7 +101,10 @@ def run_dependency_lock(
         return compile_status
 
     if check_lockfile:
-        return verify_lockfile_clean(requirements_lock)
+        diff_status = verify_lockfile_clean(requirements_lock)
+        if diff_status == 0:
+            print(f"dependency-lock: {requirements_lock} is current")
+        return diff_status
 
     return 0
 

@@ -834,7 +834,8 @@ Last updated: 2026-07-08
     `tools.doctor_env` process execution
   - dependency lock workflows dispatch through `tools.run_dependency_lock`,
     keeping pip-tools bootstrap, compile, and lockfile diff-check behaviour in
-    a tested Python helper
+    a tested Python helper; clean lock checks print concise status output while
+    compile failures still emit captured process output
   - runtime shell wrappers that dispatch back into Make share
     `tools/make_runtime.sh`, which resolves the configured `MAKE` command and
     reports missing Make prerequisites with caller-specific diagnostics
