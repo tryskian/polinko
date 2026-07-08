@@ -20,6 +20,7 @@ def _write_precommit(root: Path, text: str) -> None:
 def _make_contract_text(
     *,
     ci_docs_deps: tuple[str, ...] | None = None,
+    build_hygiene_core_deps: tuple[str, ...] | None = None,
     build_hygiene_deps: tuple[str, ...] | None = None,
     omit_targets: set[str] | None = None,
     extra_lines: tuple[str, ...] = (),
@@ -33,6 +34,13 @@ def _make_contract_text(
     lines.append(
         "ci-docs: "
         + " ".join(ci_docs_deps or check_runtime_risk_scan.REQUIRED_CI_DOCS_DEPS)
+    )
+    lines.append(
+        "build-hygiene-core: "
+        + " ".join(
+            build_hygiene_core_deps
+            or check_runtime_risk_scan.REQUIRED_BUILD_HYGIENE_CORE_DEPS
+        )
     )
     lines.append(
         "build-hygiene: "
@@ -346,11 +354,20 @@ class RuntimeRiskScanTests(unittest.TestCase):
 
     def test_missing_build_hygiene_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
-            _make_contract_text(build_hygiene_deps=("transcript-check", "ci"))
+            _make_contract_text(build_hygiene_core_deps=("transcript-check",))
         )
 
         self.assertIn(
-            "build-hygiene: missing dependency 'doctor-env'",
+            "build-hygiene-core: missing dependency 'doctor-env'",
+            failures,
+        )
+
+        failures = check_runtime_risk_scan.check_make_contracts(
+            _make_contract_text(build_hygiene_deps=("ci",))
+        )
+
+        self.assertIn(
+            "build-hygiene: missing dependency 'build-hygiene-core'",
             failures,
         )
 

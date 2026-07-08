@@ -53,6 +53,7 @@ REQUIRED_MAKE_TARGETS = (
     "end-preflight",
     "end-stop",
     "session-status",
+    "build-hygiene-core",
     "build-hygiene",
     "pr-preflight",
     "ci",
@@ -130,9 +131,13 @@ REQUIRED_CI_DOCS_DEPS = (
     "lint-docs",
 )
 
-REQUIRED_BUILD_HYGIENE_DEPS = (
+REQUIRED_BUILD_HYGIENE_CORE_DEPS = (
     "doctor-env",
     "transcript-check",
+)
+
+REQUIRED_BUILD_HYGIENE_DEPS = (
+    "build-hygiene-core",
     "ci",
 )
 
@@ -326,6 +331,14 @@ def check_make_contracts(text: str) -> list[str]:
         for dep in REQUIRED_CI_DOCS_DEPS:
             if dep not in deps:
                 failures.append(f"ci-docs: missing dependency {dep!r}")
+
+    build_hygiene_core_deps = make_target_deps(text, "build-hygiene-core")
+    if not build_hygiene_core_deps:
+        failures.append("build-hygiene-core: missing Make target")
+    else:
+        for dep in REQUIRED_BUILD_HYGIENE_CORE_DEPS:
+            if dep not in build_hygiene_core_deps:
+                failures.append(f"build-hygiene-core: missing dependency {dep!r}")
 
     build_hygiene_deps = make_target_deps(text, "build-hygiene")
     if not build_hygiene_deps:
