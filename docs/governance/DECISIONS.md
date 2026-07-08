@@ -6770,3 +6770,22 @@ or branch history instead.
   backticks to execute as shell command substitutions before PR creation.
   Encoding the safe path as an operator helper and a regression keeps this
   defect class out of future PR work.
+
+## D-402: Move active Polinkofolio work to the standalone repo
+
+- Date: `2026-07-08`
+- Category: `evidence_governance`
+- Tags: `polinkofolio`, `scope`, `archive`, `repo_boundary`,
+  `source_truth`
+- Human-led: The human lead clarified that `foleab` now owns Polinkofolio in
+  its dedicated repo, so Polinko should stop treating Polinkofolio as the next
+  active lane.
+- Engineer implementation: Confirm `tryskian/polinkofolio` is private and not
+  archived, move tracked Polinko-side Polinkofolio draft/scaffold surfaces into
+  `.archive/quarantine/polinkofolio-2026-07-08/`, and update current-state
+  handoff wording.
+- Decision: Active Polinkofolio work belongs in the private standalone
+  `tryskian/polinkofolio` repo. Polinko keeps its role as the canonical
+  research system and source of truth for runtime, eval, and evidence work.
+- Why: Keeping Polinkofolio active inside Polinko made startup point to the
+  wrong next lane after the dedicated repo had taken ownership.
