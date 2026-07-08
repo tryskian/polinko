@@ -6875,3 +6875,22 @@ or branch history instead.
 - Why: The CI topology now separates leaf jobs cleanly, so the next efficiency
   step is reducing repeated locked dependency installation while preserving the
   same commands and gates.
+
+## D-408: Add repo-owned runtime cache cleanup helpers
+
+- Date: `2026-07-08`
+- Category: `operator_workflow`
+- Tags: `runtime`, `caches`, `make`, `operator_hygiene`, `local_tooling`
+- Human-led: The human lead identified that ignored cache footprints can look
+  like active source surfaces during manual audits.
+- Engineer implementation: Add `tools.clean_runtime_caches`,
+  `make cache-clean-preview`, and `make cache-clean`, with focused tests and
+  Make contract coverage proving the helper excludes `.venv`, `venv`, and
+  `node_modules`.
+- Decision: Runtime cache cleanup is an explicit operator helper surface.
+  Preview lists repo-owned cache directories; apply removes repo-owned cache
+  directories without touching environment/vendor directories or tracked
+  source.
+- Why: Stale ignored caches should not create false source-footprint signals
+  during audits, and the cleanup path should be automated, testable, and
+  visible through Make.
