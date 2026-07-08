@@ -34,6 +34,10 @@ evidence-preserving method work.
   - if a defect is noticed manually and belongs to an existing validation gate,
     add it to that gate
   - if no gate exists, name the closest owner before closing the kernel
+- Treat PR body text as file/stdin data:
+  - Markdown, code spans, and backticks go through `--body-file` or the
+    `make github-pr-create` helper
+  - avoid inline shell-quoted PR body strings
 - Fail fast on config, auth, and runtime issues.
 - Inspect evidence before interpretation.
 - Audit live surfaces before edits:

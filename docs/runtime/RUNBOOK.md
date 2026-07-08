@@ -127,7 +127,12 @@ Use this doc for operator procedure.
 3. Run the PR readiness gate:
    - `make pr-preflight`
 4. Push the branch.
-5. Open a PR to `main`.
+5. Open a PR to `main` through the safe body-file path:
+   - write the Markdown body to `.local/pr_body.md` or pass stdin through a
+     quoted heredoc
+   - `GITHUB_PR_HEAD=<branch> GITHUB_PR_TITLE=<title> GITHUB_PR_BODY_FILE=.local/pr_body.md make github-pr-create`
+   - PR Markdown, code spans, and backticks go through `--body-file`; inline
+     shell-quoted PR body strings are not a maintained operator path
 6. Wait for required checks.
 7. Merge through the protected-main flow.
 8. Sync local `main`:

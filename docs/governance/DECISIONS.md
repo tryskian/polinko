@@ -6752,3 +6752,21 @@ or branch history instead.
   but the narrow closeout-doc command used before PR creation did not invoke
   it. Wiring the guard into `end-docs-check` makes the local command fail
   before a closeout-doc PR reaches GitHub.
+
+## D-401: Route PR body publication through body-file
+
+- Date: `2026-07-08`
+- Category: `operator_workflow`
+- Tags: `pull_requests`, `shell`, `operator_hygiene`, `github`, `make`
+- Human-led: The human lead clarified that the local PR-body quoting mistake
+  was not a small issue; all workflow failures need tracked prevention.
+- Engineer implementation: Add `tools/github_pr_create.sh` and
+  `make github-pr-create`, with focused coverage proving PR Markdown is passed
+  to GitHub through `--body-file` rather than an inline shell string.
+- Decision: PR bodies that contain Markdown, code spans, or backticks are
+  passed as file/stdin data through `--body-file`. Inline shell-quoted PR body
+  strings are not a maintained operator path.
+- Why: A double-quoted `gh pr create --body "..."` command allowed Markdown
+  backticks to execute as shell command substitutions before PR creation.
+  Encoding the safe path as an operator helper and a regression keeps this
+  defect class out of future PR work.

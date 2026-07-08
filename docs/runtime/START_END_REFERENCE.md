@@ -199,6 +199,8 @@ Active kernel validation:
   surfaces
 - Use `make pr-preflight` before publishing a PR as the local readiness command for
   `make build-hygiene`
+- Use `make github-pr-create` with `GITHUB_PR_BODY_FILE=<path>` when publishing
+  PR Markdown; PR bodies with code spans or backticks go through `--body-file`
 - Use `make end-preflight` when the kernel is broad enough to need the full
   branch-local quality suite
 - End each kernel summary with the recommended next kernel
