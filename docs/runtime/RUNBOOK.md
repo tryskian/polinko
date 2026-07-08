@@ -214,6 +214,12 @@ Use this doc for operator procedure.
   - report closeout wake-lock status
 - `make api-smoke`
   - live backend smoke check with isolated default localhost port and DB paths
+- `make cache-clean-preview`
+  - list repo-owned runtime cache directories without touching `.venv`,
+    `venv`, `node_modules`, or tracked source
+- `make cache-clean`
+  - remove repo-owned runtime cache directories without touching `.venv`,
+    `venv`, `node_modules`, or tracked source
 - `make manual-evals-db-status`
   - print read-only manual eval warehouse freshness without rebuilding
 - `make manual-evals-db`

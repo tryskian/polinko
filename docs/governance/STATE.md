@@ -376,8 +376,8 @@ Last updated: 2026-07-08
     lint, diagram render, transcript, and closeout freshness fragments live
     under `makefiles/checks/docs/`. Dev-tool check targets keep their public
     entrypoint at `makefiles/checks/dev-tools.mk`, while repo search,
-    pre-commit, and local `act` helper fragments live under
-    `makefiles/checks/dev-tools/`
+    pre-commit, local `act`, GitHub PR, and cache cleanup helper fragments live
+    under `makefiles/checks/dev-tools/`
   - `make test-timing` is a diagnostic duration surface for test telemetry;
     `make test` remains the canonical unittest suite gate
   - runtime audit targets keep the public entrypoint at
@@ -863,6 +863,9 @@ Last updated: 2026-07-08
   - GitHub CI Python dependency-install jobs restore pip cache from
     `requirements.txt`, while docs-only Python setup and local Make gates keep
     their existing command paths
+  - `make cache-clean-preview` and `make cache-clean` list and remove
+    repo-owned runtime cache directories while excluding `.venv`, `venv`,
+    `node_modules`, and tracked source
   - `make build-hygiene` is the local PR-safe aggregate gate for the core
     hygiene target plus CI build/test/security/doc gates, repeats whitespace
     diff checking after those gates, and `make pr-preflight` provides the local

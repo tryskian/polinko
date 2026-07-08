@@ -115,6 +115,9 @@ MAKE_CHECKS_DEV_TOOLS = REPO_ROOT / "makefiles" / "checks" / "dev-tools.mk"
 MAKE_CHECKS_DEV_TOOLS_GITHUB = (
     REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "github.mk"
 )
+MAKE_CHECKS_DEV_TOOLS_CACHE = (
+    REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "cache.mk"
+)
 MAKE_CHECKS_DEV_TOOLS_ACT = REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "act.mk"
 MAKE_CHECKS_DEV_TOOLS_PRECOMMIT = (
     REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "precommit.mk"
@@ -198,6 +201,7 @@ OCR_LANE_INVENTORY_SCRIPT = REPO_ROOT / "tools" / "report_ocr_lane_inventory.py"
 OCR_INTAKE_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_intake_workflow.sh"
 SHELL_SCRIPT_CONTRACT_SCRIPT = REPO_ROOT / "tools" / "check_shell_scripts.py"
 LOCAL_PRIVACY_GUARD_SCRIPT = REPO_ROOT / "tools" / "local_privacy_guard.sh"
+CLEAN_RUNTIME_CACHES_SCRIPT = REPO_ROOT / "tools" / "clean_runtime_caches.py"
 END_GIT_CHECK_SCRIPT = REPO_ROOT / "tools" / "check_end_git_clean.sh"
 SESSION_STATUS_SCRIPT = REPO_ROOT / "tools" / "session_status.sh"
 MAKE_RUNTIME_SCRIPT = REPO_ROOT / "tools" / "make_runtime.sh"
@@ -2400,6 +2404,27 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(PYTHON) -m tools.check_operator_commands", text)
         self.assertRegex(text, r"(?m)^path-leak-audit-local:$")
         self.assertIn("$(PYTHON) -m tools.path_leak_check --scope local-config", text)
+        self.assertIn("cache-clean-preview", _phony_targets())
+        self.assertIn("cache-clean", _phony_targets())
+        self.assertRegex(text, r"(?m)^cache-clean-preview:$")
+        self.assertRegex(text, r"(?m)^cache-clean:$")
+        self.assertIn(
+            "PYTHONDONTWRITEBYTECODE=1 $(PYTHON) -m tools.clean_runtime_caches",
+            text,
+        )
+        self.assertIn(
+            "PYTHONDONTWRITEBYTECODE=1 $(PYTHON) -m tools.clean_runtime_caches --apply",
+            text,
+        )
+        self.assertIn(
+            "include makefiles/checks/dev-tools/cache.mk",
+            MAKE_CHECKS_DEV_TOOLS.read_text(encoding="utf-8"),
+        )
+        self.assertIn(
+            "cache-clean-preview",
+            MAKE_CHECKS_DEV_TOOLS_CACHE.read_text(encoding="utf-8"),
+        )
+        self.assertTrue(CLEAN_RUNTIME_CACHES_SCRIPT.exists())
         self.assertIn("$(MAKE) --no-print-directory local-runtime-config-check", text)
         self.assertIn("CORE_STEP_LABELS=(", closeout_text)
         self.assertIn("TOTAL_STEPS=${#CORE_STEP_LABELS[@]}", closeout_text)
