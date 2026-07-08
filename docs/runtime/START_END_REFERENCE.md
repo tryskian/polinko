@@ -216,7 +216,7 @@ Sequence:
 
 | Step | Action | Command |
 | --- | --- | --- |
-| 1 | Verify current-truth docs freshness | `make end-docs-check` |
+| 1 | Verify current-truth docs freshness and path safety | `make end-docs-check` |
 | 2 | Run transcript repair | `make transcript-fix` |
 | 3 | Validate curated transcripts | `make transcript-check` |
 | 4 | Verify the environment | `make doctor-env` |
@@ -247,6 +247,7 @@ Preflight:
 Explicit companion checks:
 
 - `make end-docs-check`
+  - checks tracked text surfaces for local machine path leaks
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
   - when local `SESSION_HANDOFF` exists, verifies it names the current short
     commit so same-date stale handoffs fail closeout

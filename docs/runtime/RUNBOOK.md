@@ -491,6 +491,7 @@ Use this doc for operator procedure.
     `make end-stop`, GitHub health, stale-ref prune, and final clean-main Git
     check
 - `make end-docs-check`
+  - checks tracked text surfaces for local machine path leaks
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
   - when local `SESSION_HANDOFF` exists, verifies it names the current short
     commit so same-date stale handoffs fail closeout

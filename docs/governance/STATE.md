@@ -998,9 +998,10 @@ Last updated: 2026-07-08
   - `PACKAGE_BOUNDARY` holds the Python package-boundary contract
   - `make package-install-check` verifies the editable-install rail
   - local `SESSION_HANDOFF` holds the active slice
-  - `make end-docs-check` verifies `STATE` and local `SESSION_HANDOFF` date
-    freshness; when local `SESSION_HANDOFF` exists, it must also mention the
-    current commit so same-date stale handoffs fail closeout
+  - `make end-docs-check` runs the tracked path-leak guard, then verifies
+    `STATE` and local `SESSION_HANDOFF` date freshness; when local
+    `SESSION_HANDOFF` exists, it must also mention the current commit so
+    same-date stale handoffs fail closeout
   - authored Markdown prose uses standard wrapped line breaks; literal syntax
     and source evidence structure stay intact when wrapping would change
     meaning
