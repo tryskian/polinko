@@ -860,6 +860,9 @@ Last updated: 2026-07-08
   - `make build-hygiene-core` is the CI core hygiene gate for environment
     doctor, transcript validation, and whitespace diff checks; GitHub CI runs
     it beside the named leaf jobs instead of rerunning the full aggregate
+  - GitHub CI Python dependency-install jobs restore pip cache from
+    `requirements.txt`, while docs-only Python setup and local Make gates keep
+    their existing command paths
   - `make build-hygiene` is the local PR-safe aggregate gate for the core
     hygiene target plus CI build/test/security/doc gates, repeats whitespace
     diff checking after those gates, and `make pr-preflight` provides the local

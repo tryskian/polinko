@@ -3469,6 +3469,21 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("actions/setup-node", build_hygiene_job)
         self.assertNotIn("npm ci", build_hygiene_job)
 
+    def test_ci_python_dependency_jobs_use_requirements_cache(self) -> None:
+        workflow_text = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(
+            encoding="utf-8"
+        )
+
+        python_dependency_install_count = workflow_text.count(
+            "pip install -r requirements.txt"
+        )
+        self.assertEqual(python_dependency_install_count, 5)
+        self.assertEqual(workflow_text.count('cache: "pip"'), 5)
+        self.assertEqual(
+            workflow_text.count("cache-dependency-path: requirements.txt"), 5
+        )
+        self.assertEqual(workflow_text.count('cache: "npm"'), 2)
+
     def test_python_security_gate_keeps_narrow_no_fix_audit_exception(self) -> None:
         text = _makefile_contract_text()
 

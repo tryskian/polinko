@@ -566,6 +566,8 @@ Use this doc for operator procedure.
 - `make build-hygiene-core`
   - CI core hygiene target for environment doctor, transcript validation, and
     whitespace diff checks
+  - GitHub dependency-install jobs restore pip cache from `requirements.txt`;
+    local command behaviour is unchanged
 - `make build-hygiene`
   - PR-safe build hygiene gate that runs `doctor-env`, `transcript-check`,
     `make ci`, and `git diff --check` through the core target plus named CI
