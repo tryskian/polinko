@@ -29,9 +29,20 @@ artefact itself instead of trusting:
 
 In short: confidence follows evidence.
 
+The current sustainability question extends that same binary structure into
+resource pressure. If a leaner evaluation protocol reduces retries, reruns,
+overgeneration, and correction churn, it may reduce unnecessary inference.
+Unnecessary inference is compute work; compute work consumes energy; and
+energy-intensive infrastructure creates cooling demand that can require water.
+
 ## What Makes It Distinct
 
 - Failure is the main signal.
+- Binary eval gates keep the operational decision visible before richer
+  interpretation begins.
+- Sustainability is measured first as unnecessary inference and correction
+  churn; energy use, cooling demand, and water impact are the downstream
+  resource implications.
 - The transcript lane is primary-source research material.
 - Human authorship stays explicit:
   - Krystian owns theory, judgement, and publication decisions.

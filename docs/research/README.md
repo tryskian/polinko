@@ -44,6 +44,13 @@ enough to read in public.
   - `2` retained fail rows
   - `1` evicted fail row
   - widened backlog: `9` conversations / `8` families
+- lean binary evaluation is the staged sustainability lane:
+  - the current question is whether reduced context clutter and correction churn
+    reduce unnecessary inference
+  - energy use, cooling demand, and water impact are downstream resource
+    implications of compute waste
+  - public framing lives in the current research packet until tracked evidence
+    exists
 - the current lane map is explicit:
   - it is a live research surface for the next method claim
 
@@ -57,6 +64,8 @@ enough to read in public.
   - response-behaviour stability
 - thin:
   - operator burden
+- staged:
+  - lean binary sustainability and compute-efficiency question
 - current promotion read:
   - no additional non-OCR lane currently meets promotion criteria
 
@@ -86,6 +95,9 @@ enough to read in public.
   - [Operator burden signal shape](./operator-burden-signal-shape-2026-05-12.md)
 - historical method evidence:
   - [Fail-pressure pulse hypothesis](./fail-pressure-pulse-hypothesis-2026-05-16.md)
+- staged public frame:
+  - [Public research packet](../public/RESEARCH.md)
+  - [Current hypotheses](../public/HYPOTHESIS.md)
 - backlog context:
   - [Behaviour backlog snapshot](./behaviour-backlog-2026-05-08.md)
 

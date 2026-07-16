@@ -3,7 +3,9 @@
 # Evidence
 
 This note defines what counts as evidence, which beta eras matter, and how
-Polinko separates public proof from working material.
+Polinko separates public proof from working material. Evidence supports,
+qualifies, or changes the hypotheses and conclusions in the broader
+[research packet](RESEARCH.md).
 
 ## Evidence Layers
 
@@ -81,7 +83,8 @@ Private/local evidence stays untracked unless explicitly promoted:
 
 ## Reading Path
 
-1. Start with [Hypothesis](HYPOTHESIS.md).
-2. Review [Diagrams](DIAGRAMS.md).
-3. Use [Eval Evidence Map](../eval/README.md) for beta/eval detail.
-4. Use runtime/governance docs only for implementation or process specifics.
+1. Start with [Research](RESEARCH.md).
+2. Review [Current Hypotheses](HYPOTHESIS.md).
+3. Review [Diagrams](DIAGRAMS.md).
+4. Use [Eval Evidence Map](../eval/README.md) for beta/eval detail.
+5. Use runtime/governance docs only for implementation or process specifics.

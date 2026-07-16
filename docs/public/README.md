@@ -17,6 +17,11 @@ This is the shortest route through Polinko’s research surface.
 - uncertainty-boundary and hallucination-boundary surfaces are currently green
 - operator burden is the active thin lane:
   - distinct evidence is present, but the lane is still narrow
+- lean binary evaluation is the staged sustainability lane:
+  - the current question is whether reduced context clutter and correction churn
+    reduce unnecessary inference
+  - unnecessary inference is the measurable layer; energy use, cooling demand,
+    and water impact are the downstream resource implications
 - the research surface remains open:
   - current proof is stable enough to read, and more exploration is still in
     play
@@ -25,9 +30,10 @@ This is the shortest route through Polinko’s research surface.
 
 1. [Polinko in Brief](IN_BRIEF.md): shortest summary
 2. [Method & Authorship](METHOD.md): claim ownership and AI role
-3. [Hypothesis](HYPOTHESIS.md): what the project is actually testing
-4. [Evidence](EVIDENCE.md): what counts as evidence and where it lives
-5. [Diagrams](DIAGRAMS.md): visual structure
+3. [Research](RESEARCH.md): current questions, conclusions, and research lanes
+4. [Current Hypotheses](HYPOTHESIS.md): claims and evidence status
+5. [Evidence](EVIDENCE.md): what counts as evidence and where it lives
+6. [Diagrams](DIAGRAMS.md): visual structure
 
 ## If You Need Research Next
 
