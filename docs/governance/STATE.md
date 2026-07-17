@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-07-08
+Last updated: 2026-07-17
 
 ## Current Truth
 
@@ -74,6 +74,10 @@ Last updated: 2026-07-08
     active model refactor, eval contract, research surface, and CI status
   - the root README points to public research docs and keeps public navigation
     focused on repo-owned research surfaces
+  - the root README now points to `krystian.io` as the website doorway while
+    preserving this repository as the research surface
+  - `docs/public/RESEARCH.md` is the public research packet doorway for
+    current questions, evidence boundaries, and source-led read paths
   - portfolio app, static output, Netlify config, and mockup/build helpers are
     quarantined under
     `.archive/quarantine/portfolio-2026-06-29/` for porting to `krystian.io`
@@ -771,6 +775,10 @@ Last updated: 2026-07-08
   - Python security tooling and pins are tracked through `requirements.in` plus
     generated `requirements.txt`; current refreshed pins include
     `pip-audit==2.10.0`, `PyJWT==2.13.0`, `pip==26.1.2`, and `pypdf==6.13.3`
+  - PR `#1049` updated active security pins to `mcp==1.28.1` and
+    `click==8.3.3`; GitHub Actions security checks passed before merge, while
+    Dependabot alert closure may lag until GitHub refreshes the dependency
+    graph
   - root Node security locks are tracked through `package-lock.json`; current
     refreshed transitive pins include `undici==7.28.0`
   - GitHub CI runs on pull requests and on pushes to `main`; feature-branch
@@ -787,6 +795,9 @@ Last updated: 2026-07-08
     `make start` surfaces it before local runtime checks, and `make end` runs
     it during final closeout before stale-ref pruning and the clean-main Git
     gate
+  - `make github-health` treats `main` plus open PR head branches as active
+    workflow surfaces, so deleted or closed PR branch failures do not block
+    clean-main closeout after their keeper branch has merged
   - Dependabot routine and security updates are grouped by ecosystem so Python,
     root npm, and GitHub Actions updates stay below GitHub's open PR queue
     limits
