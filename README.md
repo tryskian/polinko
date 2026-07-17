@@ -21,7 +21,8 @@ Polinko is a human-led research system for inspecting AI behaviour through
 fail-first evaluation, evidence-preserving method work, and repo-native
 publishing.
 
-The website is a doorway. The repository is the research surface.
+[krystian.io](https://www.krystian.io/) is the website doorway. This
+repository is the research surface.
 
 ## Research Question
 
