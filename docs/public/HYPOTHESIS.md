@@ -1,6 +1,11 @@
 <!-- @format -->
 
-# Hypothesis
+# Current Hypotheses
+
+This note records the current hypotheses inside Polinko's broader
+[research surface](RESEARCH.md). A hypothesis is a research claim at its current
+evidence boundary. Its status describes what evidence has been earned.
+Supported hypotheses can be stated as conclusions at that evidence boundary.
 
 Polinko investigates model behaviour through small, inspectable evaluation
 systems rather than large dashboard abstractions.
@@ -12,13 +17,15 @@ The working question is:
 
 ## What It Studies
 
-Polinko is a local-first evaluation lab for small, inspectable hypothesis lanes:
+Polinko is a local-first evaluation lab for small, inspectable research lanes:
 
 - OCR reliability
 - OCR confidence boundaries around inference and hallucination
 - co-reasoning reliability
 - source-first research-model evidence
 - operator burden under different control surfaces
+- reasoning reliability, compute efficiency, and sustainability pressure under
+  lean binary structure
 - retrieval grounding
 - response-behaviour stability
 
@@ -27,6 +34,16 @@ live together so claims can be traced back to source material.
 
 ## Current Hypothesis Matrix
 
+- `Lean binary evaluation may improve reasoning reliability and compute
+efficiency by reducing context clutter and correction churn`
+  - status: staged, extending the base Polinko binary hypothesis into compute
+    and energy pressure
+  - sustainability frame: unnecessary inference creates compute work; compute
+    work consumes energy; energy-intensive infrastructure creates cooling demand;
+    cooling can require water depending on the system
+  - measured by: paired equivalent task shapes, token usage, retry count,
+    validation reruns, human correction burden, and output length against
+    accepted answer quality
 - `OCR reliability`
   - status: operationalised
   - measured by: OCR, OCR recovery, OCR safety, growth/focus stability, OCR
@@ -47,7 +64,7 @@ live together so claims can be traced back to source material.
 - `Commentary-heavy response contracts increase operator burden`
   - status: thin lane
   - measured by: experiment `R-D`, manual transcript diagnostics, the tracked
-  operator-burden row surface, and export-backed control-contract mining
+    operator-burden row surface, and export-backed control-contract mining
 - `Retrieval grounding should stay inspectable and source-bound`
   - status: operationalised
   - measured by: retrieval and file-search eval suites, the tracked retrieval

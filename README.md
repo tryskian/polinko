@@ -21,7 +21,8 @@ Polinko is a human-led research system for inspecting AI behaviour through
 fail-first evaluation, evidence-preserving method work, and repo-native
 publishing.
 
-The website is a doorway. The repository is the research surface.
+[krystian.io](https://www.krystian.io/) is the website doorway. This
+repository is the research surface.
 
 ## Research Question
 
@@ -50,6 +51,10 @@ It is one part of the broader research model.
 - Retrieval, response behaviour, uncertainty boundary, and hallucination
   boundary are operationalised support surfaces.
 - Operator burden is the active thin lane.
+- Lean binary evaluation is staged as a sustainability question: whether reduced
+  context clutter and correction churn can reduce unnecessary inference, with
+  energy use, cooling demand, and water impact as downstream resource
+  implications.
 - Source-first row and case evidence is the pre-Beta 2.4 method foundation.
 
 ## Refactor Map
