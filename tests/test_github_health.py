@@ -86,6 +86,41 @@ class GitHubHealthTests(unittest.TestCase):
 
         self.assertEqual([run["databaseId"] for run in failures], [128])
 
+    def test_active_workflow_branches_include_main_and_open_pr_heads(self) -> None:
+        branches = github_health.active_workflow_branches(
+            [{"number": 1, "headRefName": "codex/bigbrain/example"}]
+        )
+
+        self.assertEqual(branches, {"main", "codex/bigbrain/example"})
+
+    def test_closed_branch_failed_workflow_run_is_ignored_for_active_scan(
+        self,
+    ) -> None:
+        runs = [
+            {
+                "databaseId": 130,
+                "workflowName": "CI",
+                "displayTitle": "Deleted branch",
+                "headBranch": "dependabot/pip/stale",
+                "event": "pull_request",
+                "conclusion": "failure",
+                "createdAt": "2026-06-30T10:00:00Z",
+            },
+            {
+                "databaseId": 131,
+                "workflowName": "CI",
+                "displayTitle": "Main",
+                "headBranch": "main",
+                "event": "push",
+                "conclusion": "success",
+                "createdAt": "2026-06-30T10:02:00Z",
+            },
+        ]
+
+        failures = github_health.failed_runs(runs, {"main"})
+
+        self.assertEqual(failures, [])
+
     def test_report_failed_runs_uses_latest_surface_label(self) -> None:
         stdout = io.StringIO()
 

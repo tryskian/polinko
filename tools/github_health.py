@@ -95,18 +95,47 @@ def latest_runs_by_surface(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return list(latest.values())
 
 
-def failed_runs(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def active_workflow_branches(
+    prs: list[dict[str, Any]], default_branch: str = "main"
+) -> set[str]:
+    branches = {default_branch}
+    for pr in prs:
+        head = str(pr.get("headRefName") or "").strip()
+        if head:
+            branches.add(head)
+    return branches
+
+
+def filter_active_branch_runs(
+    runs: list[dict[str, Any]], active_branches: set[str] | None
+) -> list[dict[str, Any]]:
+    if active_branches is None:
+        return runs
     return [
         run
-        for run in latest_runs_by_surface(runs)
+        for run in runs
+        if str(run.get("headBranch") or "").strip() in active_branches
+    ]
+
+
+def failed_runs(
+    runs: list[dict[str, Any]], active_branches: set[str] | None = None
+) -> list[dict[str, Any]]:
+    active_runs = filter_active_branch_runs(runs, active_branches)
+    return [
+        run
+        for run in latest_runs_by_surface(active_runs)
         if _normalise(run.get("conclusion")) in FAILED_CONCLUSIONS
     ]
 
 
-def pending_runs(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def pending_runs(
+    runs: list[dict[str, Any]], active_branches: set[str] | None = None
+) -> list[dict[str, Any]]:
+    active_runs = filter_active_branch_runs(runs, active_branches)
     return [
         run
-        for run in latest_runs_by_surface(runs)
+        for run in latest_runs_by_surface(active_runs)
         if _normalise(run.get("status")) in PENDING_STATES
     ]
 
@@ -213,9 +242,11 @@ def auth_status(gh: str) -> bool:
     return False
 
 
-def report_failed_runs(runs: list[dict[str, Any]]) -> int:
-    failures = failed_runs(runs)
-    pending = pending_runs(runs)
+def report_failed_runs(
+    runs: list[dict[str, Any]], active_branches: set[str] | None = None
+) -> int:
+    failures = failed_runs(runs, active_branches)
+    pending = pending_runs(runs, active_branches)
 
     if not failures and not pending:
         print("[ok] latest workflow surfaces")
@@ -367,9 +398,13 @@ def main(argv: list[str] | None = None) -> int:
         print_command_failure(exc)
         return 1
 
+    run_list = runs if isinstance(runs, list) else []
+    pr_list = prs if isinstance(prs, list) else []
+    branches = active_workflow_branches(pr_list)
+
     status = 0
-    status |= report_failed_runs(runs if isinstance(runs, list) else [])
-    status |= report_pr_checks(prs if isinstance(prs, list) else [])
+    status |= report_failed_runs(run_list, branches)
+    status |= report_pr_checks(pr_list)
     return status
 
 

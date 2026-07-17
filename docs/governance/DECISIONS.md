@@ -6894,3 +6894,20 @@ or branch history instead.
 - Why: Stale ignored caches should not create false source-footprint signals
   during audits, and the cleanup path should be automated, testable, and
   visible through Make.
+
+## D-409: Ignore stale closed-branch workflow runs during GitHub health
+
+- Date: `2026-07-17`
+- Category: `operator_workflow`
+- Tags: `github_health`, `ci`, `dependabot`, `closeout`, `operator_hygiene`
+- Human-led: The human lead asked to clean up the repo for the next
+  income-focused Polinko push.
+- Engineer implementation: Keep direct workflow-surface helpers strict by
+  default, but scope the `make github-health` CLI path to active workflow
+  branches: `main` plus open PR head branches. Add focused regression coverage
+  for closed/deleted branch failures.
+- Decision: Clean-main closeout should not be blocked by failed workflow runs
+  from deleted or closed PR branches after their keeper branch has merged.
+- Why: Stale Dependabot branch failures are no longer actionable once the
+  branch is closed/deleted and `main` carries the fixed dependency pins.
+  Current `main` and open PR checks remain blocking.
