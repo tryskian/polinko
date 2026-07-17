@@ -17,9 +17,8 @@
 > Refactor map: [method](docs/public/diagrams/refactor-method.md) ·
 > [journey](docs/public/diagrams/refactor-journey.md).
 
-Polinko is a human-led research system for inspecting AI behaviour through
-fail-first evaluation, evidence-preserving method work, and repo-native
-publishing.
+Polinko is a human-led research system for observing AI behaviour through
+binary evals, signal traces, retained failures, and repo-native evidence.
 
 [krystian.io](https://www.krystian.io/) is the website doorway. This
 repository is the research surface.
@@ -30,7 +29,7 @@ The static website source lives in `site/`. Netlify builds it with
 ## Research Question
 
 How can human-led eval work make AI failure legible enough to improve the
-method without hiding risk behind polished outputs?
+method without mistaking coherent output for reliable behaviour?
 
 ## Working Theory
 

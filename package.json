@@ -2,7 +2,7 @@
   "name": "polinko-dev-tools",
   "private": true,
   "version": "0.1.0",
-  "description": "Repo-root tooling for docs/dev checks",
+  "description": "Static site and repo-root tooling for Polinko, a human-led AI evaluation research system",
   "scripts": {
     "lint:docs": "markdownlint-cli2 README.md apps/**/*.md docs/**/*.md docs/public/diagrams/*.md docs/eval/beta_*/README.md",
     "typecheck:pyright": "pyright --project pyrightconfig.json",

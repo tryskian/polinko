@@ -1,0 +1,17 @@
+{
+  "name": "krystian.io",
+  "short_name": "krystian.io",
+  "description": "Krystian Fernando's applied AI research site for Polinko.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "minimal-ui",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "300x300",
+      "type": "image/png"
+    }
+  ]
+}
