@@ -16,7 +16,8 @@ one research output within that broader surface.
 > treating pass rate as the main story?
 
 Polinko tests whether failure-visible evaluation can make AI behaviour legible
-enough to improve the method without hiding risk behind polished outputs.
+enough to improve the method without mistaking coherent output for reliable
+behaviour.
 
 ## Latest Hypothesis
 
