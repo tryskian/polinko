@@ -91,10 +91,11 @@ if (issues.length === 0) {
   const home = pages.get("index.html");
 
   for (const token of [
-    "Polinko evaluates AI behaviour through evidence, constraints, and retained failures",
+    "Polinko evaluates AI behaviour through binary gates, evidence, and retained failures",
     "I created Polinko and lead its research",
     "Krystian Fernando",
-    "mistaking coherence for reliability",
+    "coherent output",
+    "being mistaken for reliable behaviour",
   ]) {
     if (!home.includes(token)) {
       issues.push(`site/index.html is missing grounded homepage copy: ${token}`);

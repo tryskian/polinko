@@ -12,12 +12,16 @@ one research output within that broader surface.
 
 ## Research Question
 
-> What changes when evaluation treats failure as the main signal instead of
-> treating pass rate as the main story?
+> What changes when AI evaluation begins with a binary gate instead of treating
+> pass rate as the whole story?
 
-Polinko tests whether failure-visible evaluation can make AI behaviour legible
-enough to improve the method without mistaking coherent output for reliable
-behaviour.
+Polinko uses binary gates because they align evaluation with binary computation.
+The first checkpoint stays `pass` or `fail`; interpretation begins only after
+that boundary is visible.
+
+The research tests whether failure-visible evaluation can make AI behaviour
+legible enough to improve the method without mistaking coherent output for
+reliable behaviour.
 
 ## Latest Hypothesis
 
@@ -58,8 +62,8 @@ At the current evidence boundary, the work supports these conclusions:
 - Confidence follows evidence. Model behaviour becomes more reliable when it
   re-grounds in source material or the artefact being judged.
 - Binary gates protect interpretation. `pass` / `fail`, followed by
-  `retain` / `evict` when needed, keeps the operational decision visible before
-  richer explanation begins.
+  `retain` / `evict` when needed, keeps the first judgement aligned with binary
+  computation before richer explanation begins.
 - Co-reasoning can be evaluated as a behavioural lane. It is the first promoted
   non-OCR lane, supported by tracked style and soak evidence.
 - Source-first traceability is the research method. Claims become promotable

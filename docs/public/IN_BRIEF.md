@@ -10,14 +10,19 @@ The website is the doorway. The repository is the research surface.
 
 ## What Polinko Fundamentally Is
 
-Polinko is a fail-first research instrument. It uses binary eval gates, OCR
-reliability loops, transcript-backed insight capture, and evidence-preserving
-docs to study grounded behaviour and drift.
+Polinko is a fail-first research instrument built around binary eval gates. The
+binary gate is the method's starting point because it aligns evaluation with
+binary computation: before interpretation begins, the observed behaviour either
+meets the boundary or it does not.
+
+The broader instrument includes OCR reliability loops, transcript-backed insight
+capture, and evidence-preserving docs to study grounded behaviour and drift.
 
 ## Governing Theory
 
 The strongest signal is in failure and unsettled boundaries. Binary
-`pass` / `fail` gates preserve that signal instead of smoothing it away.
+`pass` / `fail` gates preserve that signal instead of smoothing it away or
+mistaking coherent output for reliable behaviour.
 
 Reliability improves when the system re-grounds in source evidence or the
 artefact itself instead of trusting:

@@ -18,7 +18,11 @@
 > [journey](docs/public/diagrams/refactor-journey.md).
 
 Polinko is a human-led research system for observing AI behaviour through
-binary evals, signal traces, retained failures, and repo-native evidence.
+binary eval gates, signal traces, retained failures, and repo-native evidence.
+
+The binary gate is the method's starting point because it aligns evaluation with
+binary computation. Before interpretation begins, Polinko keeps the first
+judgement simple: `pass` or `fail`.
 
 [krystian.io](https://www.krystian.io/) is the website doorway. This
 repository is the research surface.
@@ -28,8 +32,8 @@ The static website source lives in `site/`. Netlify builds it with
 
 ## Research Question
 
-How can human-led eval work make AI failure legible enough to improve the
-method without mistaking coherent output for reliable behaviour?
+How can binary eval gates help separate coherent AI output from reliable AI
+behaviour while keeping evidence boundaries visible?
 
 ## Working Theory
 
@@ -40,6 +44,11 @@ path from intent to output.
 Polinko treats visible mismatch as evidence. The method preserves failures,
 classifies them, and uses them to update the next research boundary instead of
 smoothing them away.
+
+The first gate stays binary so the operational result remains visible before
+summary, interpretation, or pattern language can blur the boundary. Richer
+analysis begins only after the source evidence and retained failures are still
+traceable.
 
 OCR is one pressure lane because the expected answer is externally checkable.
 It is one part of the broader research model.
