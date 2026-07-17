@@ -76,6 +76,10 @@ Last updated: 2026-07-17
     focused on repo-owned research surfaces
   - the root README now points to `krystian.io` as the website doorway while
     preserving this repository as the research surface
+  - `site/` is the current static `krystian.io` website source; Netlify builds
+    it with `npm run build` and publishes `dist/`
+  - the `krystian.io` website remains a derived public doorway from Polinko
+    repo truth, not a replacement for runtime, eval, or evidence surfaces
   - `docs/public/RESEARCH.md` is the public research packet doorway for
     current questions, evidence boundaries, and source-led read paths
   - portfolio app, static output, Netlify config, and mockup/build helpers are

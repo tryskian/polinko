@@ -6911,3 +6911,24 @@ or branch history instead.
 - Why: Stale Dependabot branch failures are no longer actionable once the
   branch is closed/deleted and `main` carries the fixed dependency pins.
   Current `main` and open PR checks remain blocking.
+
+## D-410: Port the krystian.io website source into Polinko
+
+- Date: `2026-07-17`
+- Category: `publication_surface`
+- Tags: `krystian_io`, `netlify`, `site`, `repo_boundary`, `public_surface`
+- Human-led: The human lead clarified that `krystian.io` is the active public
+  website for the Polinko research surface and should build from Polinko, while
+  Polinkofolio remains a separate notebook surface.
+- Engineer implementation: Add the current static website source under
+  `site/`, add the root Netlify build configuration, and add focused package
+  scripts for building and checking the static site without importing the
+  broader Polinkofolio repo checks.
+- Decision: Polinko owns the `krystian.io` static website as a derived public
+  doorway from repo truth. Netlify builds it with `npm run build` and publishes
+  `dist/`. Polinkofolio remains separate and should not be reintroduced as an
+  active Polinko lane by this port.
+- Why: The custom domain was still attached to a Polinko-backed Netlify project
+  while the latest website source lived elsewhere, leaving `krystian.io` stale
+  and deploys failing. Keeping the site source beside the canonical research
+  repo removes that split without changing the runtime or evidence contract.

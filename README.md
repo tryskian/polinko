@@ -24,6 +24,9 @@ publishing.
 [krystian.io](https://www.krystian.io/) is the website doorway. This
 repository is the research surface.
 
+The static website source lives in `site/`. Netlify builds it with
+`npm run build` and publishes `dist/`.
+
 ## Research Question
 
 How can human-led eval work make AI failure legible enough to improve the
