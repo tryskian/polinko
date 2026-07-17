@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" content="Krystian Fernando" />
     <meta name="robots" content="index, follow" />
-    <meta name="description" content="Krystian Fernando is an applied AI research engineer building Polinko, a human-led research system for observing AI behaviour through binary evals." />
-    <meta name="keywords" content="Krystian Fernando, Polinko, AI evaluation, applied AI research, binary evals, human AI interaction, AI reliability" />
+    <meta name="description" content="Krystian Fernando is an applied AI research engineer building Polinko, a human-led research system for observing AI behaviour through binary eval gates." />
+    <meta name="keywords" content="Krystian Fernando, Polinko, AI evaluation, applied AI research, binary eval gates, human AI interaction, AI reliability" />
     <link rel="canonical" href="https://www.krystian.io/" />
     <meta property="og:site_name" content="krystian.io" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Krystian Fernando | Applied AI Research Engineer" />
-    <meta property="og:description" content="Krystian Fernando is an applied AI research engineer building Polinko, a human-led research system for observing AI behaviour through binary evals." />
+    <meta property="og:description" content="Krystian Fernando is an applied AI research engineer building Polinko, a human-led research system for observing AI behaviour through binary eval gates." />
     <meta property="og:url" content="https://www.krystian.io/" />
     <meta property="og:image" content="https://www.krystian.io/favicon.png" />
     <meta property="og:image:alt" content="Krystian Fernando monogram" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Krystian Fernando | Applied AI Research Engineer" />
-    <meta name="twitter:description" content="Krystian Fernando is an applied AI research engineer building Polinko, a human-led research system for observing AI behaviour through binary evals." />
+    <meta name="twitter:description" content="Krystian Fernando is an applied AI research engineer building Polinko, a human-led research system for observing AI behaviour through binary eval gates." />
     <meta name="twitter:image" content="https://www.krystian.io/favicon.png" />
     <meta name="theme-color" content="#ffffff" />
     <title>Krystian Fernando | Applied AI Research Engineer</title>
@@ -41,7 +41,7 @@
             "knowsAbout": [
               "AI evaluation",
               "human-AI interaction",
-              "binary evals",
+              "binary eval gates",
               "AI reliability",
               "evidence-led research"
             ]
@@ -61,8 +61,8 @@
             "url": "https://www.krystian.io/",
             "codeRepository": "https://github.com/tryskian/polinko",
             "creator": { "@id": "https://www.krystian.io/#krystian-fernando" },
-            "description": "Polinko is a human-led research system for observing AI behaviour through binary evals, signal traces, and retained failures.",
-            "keywords": "AI evaluation, binary evals, AI reliability, human-AI interaction, retained failures"
+            "description": "Polinko is a human-led research system for observing AI behaviour through binary eval gates, signal traces, and retained failures.",
+            "keywords": "AI evaluation, binary eval gates, AI reliability, human-AI interaction, retained failures"
           }
         ]
       }
@@ -100,11 +100,12 @@
       <section class="hero section-grid" aria-labelledby="hero-title">
         <div class="section-label">Polinko research</div>
         <div class="hero-main">
-          <h1 id="hero-title">Polinko evaluates AI behaviour through evidence, constraints, and retained failures.</h1>
+          <h1 id="hero-title">Polinko evaluates AI behaviour through binary gates, evidence, and retained failures.</h1>
           <p class="hero-lede">
-            Polinko uses binary evals, signal traces, and retained failures to
-            inspect how model output is generated and transformed without
-            mistaking coherence for reliability.
+            Polinko starts with binary eval gates because they align evaluation
+            with binary computation: the first checkpoint is pass or fail.
+            Signal traces and retained failures then keep coherent output from
+            being mistaken for reliable behaviour.
           </p>
           <p class="byline">
             I'm <a href="/about/">Krystian Fernando</a>, an applied AI research
@@ -121,16 +122,16 @@
       <section class="section-grid" aria-labelledby="why-title">
         <div class="section-label">Why Polinko exists</div>
         <div>
-          <h2 id="why-title">Coherence alone does not make an answer reliable.</h2>
+          <h2 id="why-title">The first judgement stays binary for a reason.</h2>
           <p>
-            An answer may sound complete while inventing a source, ignoring an
-            explicit constraint, overstating what was verified, or adding
-            interpretation that makes direct work harder. Polinko keeps those
-            departures visible as inspectable cases.
+            AI systems can produce coherent output without reliable behaviour.
+            Polinko keeps the first checkpoint simple: pass or fail. That binary
+            boundary makes the evaluation legible before interpretation begins.
           </p>
           <p>
-            The project asks what becomes visible when failure, rather than pass
-            rate, is treated as the main research signal.
+            From there, signal traces, source evidence, and retained failures
+            show where the behaviour met the boundary, where it missed, and what
+            the next research boundary should test.
           </p>
         </div>
       </section>
