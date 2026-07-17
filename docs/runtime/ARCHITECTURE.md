@@ -27,6 +27,10 @@ This page is the structural map of the tracked system.
   - compatibility shim for `uvicorn server:app`
 - `pyproject.toml`
   - Python package metadata and `src` layout configuration
+- `netlify.toml`
+  - Netlify configuration for the static `krystian.io` publication surface
+- `site/`
+  - static source for the derived `krystian.io` website doorway
 - `src/polinko/`
   - editable-install runtime package boundary
 - `src/polinko/cli.py`
@@ -41,6 +45,9 @@ This page is the structural map of the tracked system.
   - runtime logic, prompting, session/history, and retrieval helpers
 - `tools/`
   - local operators, evals, reports, and renderers
+  - includes `tools/build_static_site.mjs` for copying `site/` into `dist/`
+    during Netlify and local static-site builds
+  - includes `tools/check_site_contract.mjs` for static website contract checks
   - includes `tools/check_package_install.py` for editable-install validation
   - includes read-only inventory/status tools for local evidence inspection
   - includes the manual-eval health CLI entrypoint plus focused

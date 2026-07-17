@@ -5,7 +5,10 @@
   "description": "Repo-root tooling for docs/dev checks",
   "scripts": {
     "lint:docs": "markdownlint-cli2 README.md apps/**/*.md docs/**/*.md docs/public/diagrams/*.md docs/eval/beta_*/README.md",
-    "typecheck:pyright": "pyright --project pyrightconfig.json"
+    "typecheck:pyright": "pyright --project pyrightconfig.json",
+    "build": "node tools/build_static_site.mjs",
+    "site:check": "node tools/check_site_contract.mjs",
+    "check:site": "npm run site:check"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "11.16.0",
