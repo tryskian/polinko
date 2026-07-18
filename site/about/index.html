@@ -23,6 +23,17 @@
     <title>About Krystian Fernando | krystian.io</title>
     <link rel="icon" href="/favicon.png" type="image/png" sizes="300x300" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      (() => {
+        try {
+          const theme = localStorage.getItem("krystian-io-theme");
+
+          if (theme === "dark" || theme === "light") {
+            document.documentElement.dataset.theme = theme;
+          }
+        } catch {}
+      })();
+    </script>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>

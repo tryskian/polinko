@@ -4,7 +4,9 @@ const storageKey = "krystian-io-theme";
 
 function readTheme() {
   try {
-    return localStorage.getItem(storageKey) || "light";
+    const theme = localStorage.getItem(storageKey);
+
+    return theme === "dark" || theme === "light" ? theme : "light";
   } catch {
     return "light";
   }
