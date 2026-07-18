@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" content="Krystian Fernando" />
     <meta name="robots" content="index, follow" />
-    <meta name="description" content="Krystian Fernando is an applied AI research engineer building Polinko, a human-led research system for observing AI behaviour through binary eval gates." />
+    <meta name="description" content="Krystian Fernando is a creative designer and applied AI research engineer who created Polinko, a human-led research system for observing AI behaviour through binary eval gates." />
     <meta name="keywords" content="Krystian Fernando, Polinko, AI evaluation, applied AI research, binary eval gates, human AI interaction, AI reliability" />
     <link rel="canonical" href="https://www.krystian.io/" />
     <meta property="og:site_name" content="krystian.io" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Krystian Fernando | Applied AI Research Engineer" />
-    <meta property="og:description" content="Krystian Fernando is an applied AI research engineer building Polinko, a human-led research system for observing AI behaviour through binary eval gates." />
+    <meta property="og:description" content="Krystian Fernando is a creative designer and applied AI research engineer who created Polinko, a human-led research system for observing AI behaviour through binary eval gates." />
     <meta property="og:url" content="https://www.krystian.io/" />
     <meta property="og:image" content="https://www.krystian.io/favicon.png" />
     <meta property="og:image:alt" content="Krystian Fernando monogram" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Krystian Fernando | Applied AI Research Engineer" />
-    <meta name="twitter:description" content="Krystian Fernando is an applied AI research engineer building Polinko, a human-led research system for observing AI behaviour through binary eval gates." />
+    <meta name="twitter:description" content="Krystian Fernando is a creative designer and applied AI research engineer who created Polinko, a human-led research system for observing AI behaviour through binary eval gates." />
     <meta name="twitter:image" content="https://www.krystian.io/favicon.png" />
     <meta name="theme-color" content="#ffffff" />
     <title>Krystian Fernando | Applied AI Research Engineer</title>
@@ -63,7 +63,7 @@
             "name": "krystian.io",
             "url": "https://www.krystian.io/",
             "author": { "@id": "https://www.krystian.io/#krystian-fernando" },
-            "description": "Krystian Fernando's applied AI research site for Polinko."
+            "description": "Krystian Fernando's public site for Polinko and applied AI research."
           },
           {
             "@type": "ResearchProject",
@@ -89,7 +89,6 @@
         <a href="/method/">Method</a>
         <a href="/evidence/">Evidence</a>
         <a href="/diagrams/">Diagrams</a>
-        <a href="/about/">About</a>
         </nav>
         <nav class="contact-links contact-links--menu" aria-label="Contact and profiles">
           <a class="contact-link" href="https://www.linkedin.com/in/tryskian/" aria-label="Krystian Fernando on LinkedIn"><svg aria-hidden="true"><use href="/icons.svg#linkedin"></use></svg></a>
@@ -108,208 +107,92 @@
       </div>
     </header>
     <main id="main-content">
-      <section class="hero section-grid" aria-labelledby="hero-title">
-        <div class="section-label">Polinko research</div>
+      <section class="page-hero section-grid" aria-labelledby="hero-title">
+        <div class="section-label">About me</div>
         <div class="hero-main">
-          <h1 id="hero-title">Polinko evaluates AI behaviour through binary gates, evidence, and retained failures.</h1>
-          <p class="hero-lede">
-            Polinko starts with binary eval gates because they align evaluation
-            with binary computation: the first checkpoint is pass or fail.
-            Signal traces and retained failures then keep coherent output from
-            being mistaken for reliable behaviour.
+          <h1 id="hero-title">I'm Krystian Fernando, an applied AI research engineer.</h1>
+          <p class="about-intro">
+            I work across AI evaluation, human-AI interaction, research
+            communication, and the design of systems people can inspect rather
+            than simply trust.
           </p>
-          <p class="byline">
-            I'm <a href="/about/">Krystian Fernando</a>, an applied AI research
-            engineer. I created Polinko and lead its research.
-          </p>
-          <div class="hero-actions" aria-label="Primary actions">
-            <a class="text-link" href="/research/">Explore the research</a>
-            <a class="text-link text-link--muted" href="/evidence/">Review the evidence</a>
-            <a class="text-link text-link--muted" href="https://github.com/tryskian/polinko">View Polinko on GitHub</a>
+          <div class="hero-actions">
+            <a class="text-link" href="/research/">Read the research</a>
           </div>
         </div>
       </section>
 
-      <section class="section-grid" aria-labelledby="why-title">
-        <div class="section-label">Why Polinko exists</div>
+      <section class="section-grid" aria-labelledby="about-polinko-title">
+        <div class="section-label">Why I built Polinko</div>
         <div>
-          <h2 id="why-title">The first judgement stays binary for a reason.</h2>
+          <h2 id="about-polinko-title">I built Polinko to inspect the gap between a convincing response and a grounded one.</h2>
           <p>
-            AI systems can produce coherent output without reliable behaviour.
-            Polinko keeps the first checkpoint simple: pass or fail. That binary
-            boundary makes the evaluation legible before interpretation begins.
+            AI systems can produce coherent answers while departing from source
+            evidence, explicit constraints, or the limits of what they can
+            verify. Those departures are easy to smooth over once a final answer
+            looks acceptable.
           </p>
           <p>
-            From there, signal traces, source evidence, and retained failures
-            show where the behaviour met the boundary, where it missed, and what
-            the next research boundary should test.
+            I created Polinko to preserve those moments as research material. It
+            gives me a way to define bounded behavioural questions, examine
+            individual cases, keep failures visible, and revise the method when
+            the evidence points somewhere else.
           </p>
         </div>
       </section>
 
-      <section class="section-grid" aria-labelledby="portfolio-title">
-        <div class="section-label">Current investigations</div>
+      <section class="section-grid" aria-labelledby="role-title">
+        <div class="section-label">My role</div>
         <div>
-          <h2 id="portfolio-title">Six investigations are at different stages of maturity.</h2>
-          <p class="section-intro">
-            Each investigation has its own task shape, current read, and evidence
-            boundary. Results stay within the lane that produced them.
-          </p>
-          <div class="research-list">
-            <a href="/research/#ocr">
-              <h3>OCR generalisation</h3>
-              <p>The current image set is stable. The next test covers new images and harder visual conditions.</p>
-              <span class="record-status">Stable baseline</span>
-            </a>
-            <a href="/research/#co-reasoning">
-              <h3>Co-reasoning</h3>
-              <p>Tests constraint retention, mode shifts, bounded adaptation, and collaboration beyond summary.</p>
-              <span class="record-status">Promoted lane</span>
-            </a>
-            <a href="/research/#retrieval">
-              <h3>Retrieval grounding</h3>
-              <p>Tests recall and scoped search with explicit miss, isolation, and leak checks.</p>
-              <span class="record-status">Operationalised</span>
-            </a>
-            <a href="/research/#response-behaviour">
-              <h3>Response behaviour</h3>
-              <p>Tests false action claims, unsupported certainty, invented live verification, and pretended memory.</p>
-              <span class="record-status">Operationalised</span>
-            </a>
-            <a href="/research/#hallucination">
-              <h3>Hallucination boundaries</h3>
-              <p>Tests specific unsupported inventions, including archive lore and fabricated records.</p>
-              <span class="record-status">Operationalised</span>
-            </a>
-            <a href="/research/#operator-burden">
-              <h3>Operator burden</h3>
-              <p>Tracks when unwanted commentary, interpretation, or advice adds work instead of helping.</p>
-              <span class="record-status">Thin lane</span>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section class="section-grid" aria-labelledby="method-title">
-        <div class="section-label">How a claim is built</div>
-        <div>
-          <h2 id="method-title">Evidence moves from source artefact to bounded claim.</h2>
-          <div class="flow" aria-label="Polinko evidence chain">
-            <div>Source artefact</div>
-            <div>Row or case judgement</div>
-            <div>Repeated lane signal</div>
-            <div>Bounded public claim</div>
-          </div>
-          <p class="caption">
-            I define the questions and tests, direct the collaborative work,
-            contribute to the engineering, and decide whether the evidence can
-            support a public claim.
-          </p>
-          <p><a class="text-link" href="/method/">Read the method</a></p>
-        </div>
-      </section>
-
-      <section class="section-grid" aria-labelledby="evidence-title">
-        <div class="section-label">Evidence now</div>
-        <div>
-          <h2 id="evidence-title">The current baseline spans six evaluation surfaces.</h2>
+          <h2 id="role-title">I lead Polinko's research, engineering direction, and public claims.</h2>
           <p>
-            Each count is shown with the task, cases, limitations, and source
-            notes that define what it can support.
+            I define the research framework, hypotheses, task boundaries,
+            evidence criteria, exclusions, and acceptance rules. I select what
+            enters the public record, interpret the results, and make the final
+            publication decisions.
           </p>
-          <dl class="evidence-grid">
-            <div>
-              <dt class="result-label">OCR baseline</dt>
-              <dd>25/25</dd>
-              <p>Growth stability, with 16/16 focus stability and no active fail-history cases.</p>
-            </div>
-            <div>
-              <dt class="result-label">Co-reasoning</dt>
-              <dd>14/14</dd>
-              <p>Tracked style stress cases across seven collaboration behaviours.</p>
-            </div>
-            <div>
-              <dt class="result-label">Retrieval</dt>
-              <dd>12/12 + 5/5</dd>
-              <p>Retrieval and file-search cases with zero tracked miss or leak in the snapshot.</p>
-            </div>
-            <div>
-              <dt class="result-label">Response behaviour</dt>
-              <dd>7/7</dd>
-              <p>The tracked run closed cleanly, with one recovered first-attempt failure still visible.</p>
-            </div>
-            <div>
-              <dt class="result-label">Hallucination boundary</dt>
-              <dd>9/9</dd>
-              <p>Nine tracked invention cases across distinct claim families.</p>
-            </div>
-            <div>
-              <dt class="result-label">Operator burden</dt>
-              <dd>4 / 2 / 1</dd>
-              <p>Four pass anchors, two retained failures, and one evicted duplicate or noisy case.</p>
-            </div>
-          </dl>
-          <p><a class="text-link" href="/evidence/">See the evidence boundary</a></p>
-        </div>
-      </section>
-
-      <section class="section-grid" aria-labelledby="boundary-title">
-        <div class="section-label">Research boundary</div>
-        <div>
-          <h2 id="boundary-title">Results apply to the cases and conditions tested.</h2>
-          <p class="boundary-statement">
-            A passing evaluation supports a finding within its named cases,
-            method, and evidence conditions.
-          </p>
-          <div class="callout">
-            <p>
-              Limitations, exclusions, retained failures, and unresolved
-              questions remain visible alongside the result.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="section-grid" aria-labelledby="authorship-title">
-        <div class="section-label">Human-led research</div>
-        <div>
-          <h2 id="authorship-title">I lead the research and make the final judgements.</h2>
           <p>
-            I define the research questions, evaluation boundaries, evidence
-            criteria, interpretations, and final claims. I contribute to the
-            engineering and work with AI systems on dialogue, implementation,
-            analysis, stress-testing, and documentation. The process is
-            collaborative, while source authority and publication decisions are mine.
+            This matters because Polinko is an explicitly human-judged research
+            instrument. Human judgement enters the work visibly, so authorship and
+            responsibility should remain explicit too.
           </p>
-          <p><a class="text-link" href="/about/">About Krystian and the authorship model</a></p>
         </div>
       </section>
 
-      <section class="section-grid" aria-labelledby="state-title">
-        <div class="section-label">Current state</div>
+      <section class="section-grid" aria-labelledby="ai-role-title">
+        <div class="section-label">How AI participates</div>
         <div>
-          <h2 id="state-title">Beta 2.3 is the current evidence baseline.</h2>
-          <ul class="plain-list">
-            <li>Beta 2.3 preserves the evidence boundary for the current method work.</li>
-            <li>OCR is moving from current-set stability into broader generalisation pressure.</li>
-            <li>Pre-Beta 2.4 keeps row and case evidence visible before lane-level claims.</li>
-            <li>New evidence folders appear only when evidence is ready to promote.</li>
-            <li>Historical hypotheses that failed remain visible in the record.</li>
-          </ul>
-          <div class="next-links">
-            <a href="/research/">
-              <span>Research portfolio</span>
-              <p>Questions, current reads, boundaries, and next tests.</p>
-            </a>
-            <a href="/evidence/">
-              <span>Evidence record</span>
-              <p>Tracked results with context, limitations, and source links.</p>
-            </a>
-            <a href="https://github.com/tryskian/polinko/tree/main/docs/research">
-              <span>Research notes</span>
-              <p>The dated source record in the Polinko repository.</p>
-            </a>
-          </div>
+          <h2 id="ai-role-title">AI systems are collaborators, instruments, and part of what Polinko evaluates.</h2>
+          <p>
+            I use AI systems for dialogue, synthesis, reframing, bounded
+            implementation support, validation, stress-testing, and
+            documentation. Codex works with me inside the repository, while
+            model APIs are part of the runtime evaluated across OCR, retrieval,
+            response behaviour, and other bounded investigations.
+          </p>
+          <p>
+            The collaboration helps me develop and implement the work, but it
+            does not transfer authorship. I select the evidence, interpret the
+            results, authorise each claim, and make the final publication decisions.
+          </p>
+        </div>
+      </section>
+
+      <section class="section-grid" aria-labelledby="practice-title">
+        <div class="section-label">Broader practice</div>
+        <div>
+          <h2 id="practice-title">My practice brings research design, interaction design, implementation, and public explanation together.</h2>
+          <p>
+            My broader practice looks at how people understand, evaluate, and
+            collaborate with AI systems. Polinko is the current research
+            instrument through which those questions are made operational,
+            tested, documented, and communicated.
+          </p>
+          <p>
+            krystian.io gives readers the published account. The Polinko
+            repository carries the human-led collaborative method, code, evals,
+            decisions, and dated evidence record.
+          </p>
         </div>
       </section>
     </main>

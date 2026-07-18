@@ -7,6 +7,52 @@ The site presents Polinko as Krystian Fernando's human-led AI evaluation
 research system. The broader repository remains the research surface; this
 directory is the public website layer.
 
+## Route contract
+
+The public reader path is:
+
+```text
+/ -> /research/ -> /evidence/ -> /method/
+```
+
+```mermaid
+flowchart TD
+  Home["/ \nAbout Me\nKrystian, authorship, why Polinko exists"]
+  Research["/research/ \nActive Polinko research lanes"]
+  Evidence["/evidence/ \nTracked results, counts, source notes, boundaries"]
+  Method["/method/ \nBinary gates, source-first process, claim logic"]
+  Diagrams["/diagrams/ \nVisual support for evidence and method"]
+  About["/about/ \nLegacy compatibility route"]
+
+  Home --> Research
+  Research --> Evidence
+  Evidence --> Method
+
+  Diagrams -. supports .-> Evidence
+  Diagrams -. supports .-> Method
+
+  About -->|redirects to| Home
+```
+
+```mermaid
+flowchart LR
+  Person["Krystian / About Me"] --> Project["Polinko"]
+  Project --> Research["Research lanes"]
+  Research --> Evidence["Evidence"]
+  Evidence --> Method["Method"]
+  Method --> Claim["Bounded public claim"]
+```
+
+Supporting routes:
+
+- `/` owns Krystian, authorship, collaboration, and why Polinko exists.
+- `/diagrams/` owns visual support tied back to the public pages.
+- `/about/` redirects to `/` for compatibility with older links.
+
+The homepage should introduce Krystian first, then Polinko. Detailed research
+lanes belong on `/research/`, result counts and source notes belong on
+`/evidence/`, and method mechanics belong on `/method/`.
+
 ## Build
 
 Netlify builds the site with:
