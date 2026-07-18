@@ -15,6 +15,34 @@ The public reader path is:
 / -> /research/ -> /evidence/ -> /method/
 ```
 
+```mermaid
+flowchart TD
+  Home["/ \nAbout Me\nKrystian, authorship, why Polinko exists"]
+  Research["/research/ \nActive Polinko research lanes"]
+  Evidence["/evidence/ \nTracked results, counts, source notes, boundaries"]
+  Method["/method/ \nBinary gates, source-first process, claim logic"]
+  Diagrams["/diagrams/ \nVisual support for evidence and method"]
+  About["/about/ \nLegacy compatibility route"]
+
+  Home --> Research
+  Research --> Evidence
+  Evidence --> Method
+
+  Diagrams -. supports .-> Evidence
+  Diagrams -. supports .-> Method
+
+  About -->|redirects to| Home
+```
+
+```mermaid
+flowchart LR
+  Person["Krystian / About Me"] --> Project["Polinko"]
+  Project --> Research["Research lanes"]
+  Research --> Evidence["Evidence"]
+  Evidence --> Method["Method"]
+  Method --> Claim["Bounded public claim"]
+```
+
 Supporting routes:
 
 - `/` owns Krystian, authorship, collaboration, and why Polinko exists.
