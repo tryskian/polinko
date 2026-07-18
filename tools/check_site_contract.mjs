@@ -4,20 +4,24 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const siteDir = path.join(root, "site");
-const routeFiles = [
+const contentRouteFiles = [
   "index.html",
   "research/index.html",
   "method/index.html",
   "evidence/index.html",
   "diagrams/index.html",
+];
+const redirectRouteFiles = [
   "about/index.html",
 ];
+const routeFiles = [...contentRouteFiles, ...redirectRouteFiles];
 const requiredFiles = [
   ...routeFiles,
   "README.md",
   "styles.css",
   "script.js",
   "favicon.svg",
+  "_redirects",
 ];
 const issues = [];
 
@@ -28,17 +32,30 @@ for (const file of requiredFiles) {
 }
 
 if (issues.length === 0) {
-  const pages = new Map(
-    routeFiles.map((file) => [
+  const contentPages = new Map(
+    contentRouteFiles.map((file) => [
+      file,
+      readFileSync(path.join(siteDir, file), "utf8"),
+    ]),
+  );
+  const redirectPages = new Map(
+    redirectRouteFiles.map((file) => [
       file,
       readFileSync(path.join(siteDir, file), "utf8"),
     ]),
   );
   const css = readFileSync(path.join(siteDir, "styles.css"), "utf8");
   const js = readFileSync(path.join(siteDir, "script.js"), "utf8");
-  const combined = [...pages.values(), css, js].join("\n");
+  const redirects = readFileSync(path.join(siteDir, "_redirects"), "utf8");
+  const combined = [
+    ...contentPages.values(),
+    ...redirectPages.values(),
+    css,
+    js,
+    redirects,
+  ].join("\n");
 
-  for (const [file, html] of pages) {
+  for (const [file, html] of contentPages) {
     for (const token of [
       '<html lang="en"',
       "<main",
@@ -52,12 +69,15 @@ if (issues.length === 0) {
       'href="/method/"',
       'href="/evidence/"',
       'href="/diagrams/"',
-      'href="/about/"',
       'href="https://github.com/tryskian/polinko/blob/main/site/README.md"',
     ]) {
       if (!html.includes(token)) {
         issues.push(`site/${file} is missing ${token}`);
       }
+    }
+
+    if (html.includes('href="/about/"')) {
+      issues.push(`site/${file} links to duplicate about route`);
     }
 
     const themeBootstrap = 'localStorage.getItem("krystian-io-theme")';
@@ -107,16 +127,29 @@ if (issues.length === 0) {
     }
   }
 
-  const home = pages.get("index.html");
+  for (const [file, html] of redirectPages) {
+    for (const token of [
+      '<html lang="en"',
+      'name="robots" content="noindex, follow"',
+      'http-equiv="refresh" content="0; url=/"',
+      '<link rel="canonical" href="https://www.krystian.io/"',
+      'href="/"',
+    ]) {
+      if (!html.includes(token)) {
+        issues.push(`site/${file} is missing redirect token ${token}`);
+      }
+    }
+  }
+
+  const home = contentPages.get("index.html");
 
   for (const token of [
-    "Polinko evaluates AI behaviour through binary gates, evidence, and retained failures",
-    "I created Polinko and lead its research",
-    "Krystian Fernando",
-    "binary computation: the first checkpoint is pass or fail",
-    "without mistaking coherence for reliability",
-    "Start with the research, then inspect the evidence and method",
-    "The process is collaborative, and the judgement is human-owned",
+    "About me",
+    "I'm Krystian Fernando, an applied AI research engineer",
+    "I built Polinko to inspect the gap between a convincing response and a grounded one",
+    "I lead Polinko's research, engineering direction, and public claims",
+    "AI systems are collaborators, instruments, and part of what Polinko evaluates",
+    "Read the research",
   ]) {
     if (!home.includes(token)) {
       issues.push(`site/index.html is missing grounded homepage copy: ${token}`);
@@ -133,6 +166,10 @@ if (issues.length === 0) {
 
   if (!js.includes("localStorage")) {
     issues.push("site/script.js is missing persisted theme handling");
+  }
+
+  if (!redirects.includes("/about/ / 301")) {
+    issues.push("site/_redirects must route /about/ to /");
   }
 
   for (const retiredClaim of [
@@ -158,4 +195,6 @@ if (issues.length > 0) {
   process.exit(1);
 }
 
-console.log(`Site contract check passed for ${routeFiles.length} route(s).`);
+console.log(
+  `Site contract check passed for ${contentRouteFiles.length} content route(s) and ${redirectRouteFiles.length} redirect route(s).`,
+);

@@ -17,12 +17,13 @@ The public reader path is:
 
 Supporting routes:
 
-- `/about/` owns Krystian, authorship, collaboration, and accountability.
+- `/` owns Krystian, authorship, collaboration, and why Polinko exists.
 - `/diagrams/` owns visual support tied back to the public pages.
+- `/about/` redirects to `/` for compatibility with older links.
 
-The homepage should stay a front door. Detailed research lanes belong on
-`/research/`, result counts and source notes belong on `/evidence/`, and method
-mechanics belong on `/method/`.
+The homepage should introduce Krystian first, then Polinko. Detailed research
+lanes belong on `/research/`, result counts and source notes belong on
+`/evidence/`, and method mechanics belong on `/method/`.
 
 ## Build
 
