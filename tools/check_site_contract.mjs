@@ -53,6 +53,18 @@ if (issues.length === 0) {
       }
     }
 
+    const themeBootstrap = 'localStorage.getItem("krystian-io-theme")';
+    const themeIndex = html.indexOf(themeBootstrap);
+    const stylesheetIndex = html.indexOf('<link rel="stylesheet" href="/styles.css" />');
+
+    if (themeIndex === -1) {
+      issues.push(`site/${file} is missing early theme bootstrap`);
+    }
+
+    if (stylesheetIndex === -1 || themeIndex > stylesheetIndex) {
+      issues.push(`site/${file} must set saved theme before stylesheet loads`);
+    }
+
     const h1Count = (html.match(/<h1\b/g) ?? []).length;
 
     if (h1Count !== 1) {
