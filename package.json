@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Static site and repo-root tooling for Polinko, a human-led AI evaluation research system",
   "scripts": {
-    "lint:docs": "markdownlint-cli2 README.md apps/**/*.md docs/**/*.md docs/public/diagrams/*.md docs/eval/beta_*/README.md",
+    "lint:docs": "markdownlint-cli2 README.md apps/**/*.md docs/**/*.md docs/public/diagrams/*.md docs/eval/beta_*/README.md site/*.md",
     "typecheck:pyright": "pyright --project pyrightconfig.json",
     "build": "node tools/build_static_site.mjs",
     "site:check": "node tools/check_site_contract.mjs",

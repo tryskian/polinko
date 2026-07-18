@@ -12,7 +12,13 @@ const routeFiles = [
   "diagrams/index.html",
   "about/index.html",
 ];
-const requiredFiles = [...routeFiles, "styles.css", "script.js", "favicon.svg"];
+const requiredFiles = [
+  ...routeFiles,
+  "README.md",
+  "styles.css",
+  "script.js",
+  "favicon.svg",
+];
 const issues = [];
 
 for (const file of requiredFiles) {
@@ -47,6 +53,7 @@ if (issues.length === 0) {
       'href="/evidence/"',
       'href="/diagrams/"',
       'href="/about/"',
+      'href="https://github.com/tryskian/polinko/blob/main/site/README.md"',
     ]) {
       if (!html.includes(token)) {
         issues.push(`site/${file} is missing ${token}`);
