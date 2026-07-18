@@ -1,6 +1,8 @@
 const root = document.documentElement;
 const button = document.querySelector("[data-theme-toggle]");
 const storageKey = "krystian-io-theme";
+const themeSwitchDelay = 220;
+let themeSwitchTimer = 0;
 
 function readTheme() {
   try {
@@ -28,6 +30,20 @@ function applyTheme(theme) {
   );
 }
 
+function applyThemeInstantly(theme) {
+  root.setAttribute("data-theme-switching", "");
+  applyTheme(theme);
+
+  if (themeSwitchTimer) {
+    window.clearTimeout(themeSwitchTimer);
+  }
+
+  themeSwitchTimer = window.setTimeout(() => {
+    root.removeAttribute("data-theme-switching");
+    themeSwitchTimer = 0;
+  }, themeSwitchDelay);
+}
+
 // Theme state is shared across every static research route.
 applyTheme(readTheme());
 
@@ -35,7 +51,7 @@ button?.addEventListener("click", () => {
   const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
 
   writeTheme(nextTheme);
-  applyTheme(nextTheme);
+  applyThemeInstantly(nextTheme);
 });
 
 const header = document.querySelector(".site-header");
