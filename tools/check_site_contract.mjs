@@ -168,8 +168,8 @@ if (issues.length === 0) {
     issues.push("site/script.js is missing persisted theme handling");
   }
 
-  if (!redirects.includes("/about/ / 301")) {
-    issues.push("site/_redirects must route /about/ to /");
+  if (!redirects.includes("/about/ / 301!")) {
+    issues.push("site/_redirects must force /about/ to /");
   }
 
   for (const retiredClaim of [
