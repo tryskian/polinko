@@ -113,8 +113,10 @@ if (issues.length === 0) {
     "Polinko evaluates AI behaviour through binary gates, evidence, and retained failures",
     "I created Polinko and lead its research",
     "Krystian Fernando",
-    "coherent output",
-    "being mistaken for reliable behaviour",
+    "binary computation: the first checkpoint is pass or fail",
+    "without mistaking coherence for reliability",
+    "Start with the research, then inspect the evidence and method",
+    "The process is collaborative, and the judgement is human-owned",
   ]) {
     if (!home.includes(token)) {
       issues.push(`site/index.html is missing grounded homepage copy: ${token}`);

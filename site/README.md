@@ -7,6 +7,23 @@ The site presents Polinko as Krystian Fernando's human-led AI evaluation
 research system. The broader repository remains the research surface; this
 directory is the public website layer.
 
+## Route contract
+
+The public reader path is:
+
+```text
+/ -> /research/ -> /evidence/ -> /method/
+```
+
+Supporting routes:
+
+- `/about/` owns Krystian, authorship, collaboration, and accountability.
+- `/diagrams/` owns visual support tied back to the public pages.
+
+The homepage should stay a front door. Detailed research lanes belong on
+`/research/`, result counts and source notes belong on `/evidence/`, and method
+mechanics belong on `/method/`.
+
 ## Build
 
 Netlify builds the site with:
