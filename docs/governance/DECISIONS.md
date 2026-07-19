@@ -6932,3 +6932,22 @@ or branch history instead.
   while the latest website source lived elsewhere, leaving `krystian.io` stale
   and deploys failing. Keeping the site source beside the canonical research
   repo removes that split without changing the runtime or evidence contract.
+
+## D-411: Start the repo-managed server during startup
+
+- Date: `2026-07-18`
+- Category: `runtime_engineering`
+- Tags: `startup`, `server_daemon`, `qa_browser`, `operator_runtime`
+- Human-led: The human lead clarified that `make start` should leave the local
+  server running and that rendered-surface QA should use the QA browser /
+  DevTools MCP path rather than Playwright.
+- Engineer implementation: Add `make server-daemon` to
+  `tools/start_of_day_routine.sh` before `make api-smoke`, update the startup
+  prompt, runtime docs, runtime surface map, risk scan, and startup contract
+  tests.
+- Decision: `make start` starts the repo-managed server daemon before the
+  isolated smoke check and keeps rendered UI inspection routed through the QA
+  browser / DevTools MCP workflow.
+- Why: Startup should leave the operator with a live repo-owned server while
+  preserving isolated smoke verification and avoiding accidental drift back to
+  a Playwright-first browser QA path.

@@ -8,7 +8,7 @@ source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 ROOT_DIR="$POLINKO_REPO_ROOT"
 
-START_TOTAL_STEPS=6
+START_TOTAL_STEPS=7
 start_step_number=0
 
 start_step() {
@@ -36,6 +36,9 @@ make --no-print-directory caffeinate
 start_step "caffeinate-status"
 make --no-print-directory caffeinate-status
 
+start_step "server-daemon"
+make --no-print-directory server-daemon
+
 start_step "api-smoke"
 make --no-print-directory api-smoke
 
@@ -52,6 +55,7 @@ Reply in the morning ritual before implementation:
 - Startup note: one small issue or risk only if something needs attention.
 
 Apply no-guessing controls: prefer repo-scoped edits and do not modify user shell profile file or global VS Code settings unless explicitly approved in-chat.
+Use the QA browser / DevTools MCP path for rendered UI checks; Playwright stays a separate explicit local-browser helper surface.
 
 This reply is the chat-first alignment pass. Wait for human alignment before implementation.
 

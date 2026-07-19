@@ -39,6 +39,8 @@ class StartupContractTests(unittest.TestCase):
         self.assertIn("chat-first alignment pass", script)
         self.assertIn("Wait for human alignment before implementation", script)
         self.assertIn("stop before broadening", script)
+        self.assertIn("QA browser / DevTools MCP", script)
+        self.assertIn("explicit local-browser helper surface", script)
         self.assertNotIn("/abs/path/to/polinko", script)
         self.assertNotIn("In 5 bullets", script)
         self.assertNotIn("Then execute the Next Slice", script)
@@ -66,9 +68,10 @@ class StartupContractTests(unittest.TestCase):
             "doctor-env",
             "caffeinate",
             "caffeinate-status",
+            "server-daemon",
             "api-smoke",
         ]
-        self.assertIn("START_TOTAL_STEPS=6", script)
+        self.assertIn("START_TOTAL_STEPS=7", script)
         self.assertIn("start_step()", script)
         self.assertEqual(
             len(expected_steps),
@@ -76,8 +79,21 @@ class StartupContractTests(unittest.TestCase):
         )
         positions = [script.index(f'start_step "{step}"') for step in expected_steps]
         self.assertEqual(sorted(positions), positions)
-        for hardcoded_step in range(1, 7):
-            self.assertNotIn(f'echo "[start] {hardcoded_step}/6', script)
+        for hardcoded_step in range(1, 8):
+            self.assertNotIn(f'echo "[start] {hardcoded_step}/7', script)
+
+    def test_startup_starts_repo_managed_server_before_smoke(self) -> None:
+        script = _read("tools/start_of_day_routine.sh")
+
+        self.assertIn("make --no-print-directory server-daemon", script)
+        self.assertLess(
+            script.index("make --no-print-directory caffeinate-status"),
+            script.index("make --no-print-directory server-daemon"),
+        )
+        self.assertLess(
+            script.index("make --no-print-directory server-daemon"),
+            script.index("make --no-print-directory api-smoke"),
+        )
 
     def test_runtime_docs_match_start_alignment_contract(self) -> None:
         start_reference = _read("docs/runtime/START_END_REFERENCE.md")
@@ -89,13 +105,17 @@ class StartupContractTests(unittest.TestCase):
         )
         self.assertIn("kernel map", start_reference)
         self.assertIn("make github-health", start_reference)
+        self.assertIn("make server-daemon", start_reference)
         self.assertIn("continues local startup", start_reference)
         self.assertIn("chat-first alignment pass", start_reference)
+        self.assertIn("QA browser / DevTools MCP", start_reference)
         self.assertIn("wait for human alignment before implementation", start_reference)
         self.assertIn("docs/governance/DECISIONS.md", runbook)
         self.assertIn("Reply in the morning ritual before implementation", runbook)
         self.assertIn("repo root printed by `make start`", runbook)
         self.assertIn("GitHub health attention", runbook)
+        self.assertIn("repo-managed server", runbook)
+        self.assertIn("QA browser / DevTools MCP", runbook)
         self.assertIn("kernel map", runbook)
         self.assertIn("chat-first alignment pass", runbook)
         self.assertIn("Wait for human alignment before implementation", runbook)
@@ -103,6 +123,10 @@ class StartupContractTests(unittest.TestCase):
         self.assertIn('Startup["Startup and alignment"]', runtime_map)
         self.assertIn(
             'StartRoutine --> GitHubHealth["make github-health"]', runtime_map
+        )
+        self.assertIn(
+            'StartRoutine --> ServerDaemonStart["make server-daemon"]',
+            runtime_map,
         )
         self.assertNotIn("Startup and workspace bootstrap", runtime_map)
         self.assertNotIn("execute the `Next Slice`", start_reference)

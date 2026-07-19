@@ -33,8 +33,13 @@ step labels and counts stay aligned as the routine changes.
        repo `.venv` selection, an override, or host fallback
    - `make caffeinate`
    - `make caffeinate-status`
+4. Start the repo-managed local server:
+   - `make server-daemon`
+   - leaves the local API server running under repo-owned PID and log state
+5. Verify the runtime smoke path:
    - `make api-smoke`
-4. Stop before repo action:
+   - runs an isolated smoke server and smoke database paths for the smoke suite
+6. Stop before repo action:
    - print the canonical rehydrate prompt
    - the prompt tells the agent to:
      - say morning startup is complete
@@ -45,6 +50,8 @@ step labels and counts stay aligned as the routine changes.
        one recommended first kernel
      - include one startup note only if something needs attention
      - apply the no-guessing controls
+     - use the QA browser / DevTools MCP path for rendered UI checks, while
+       Playwright remains a separate explicit local-browser helper surface
      - treat the reply as the chat-first alignment pass
      - wait for human alignment before implementation
      - after alignment, run one active kernel at a time and stop before

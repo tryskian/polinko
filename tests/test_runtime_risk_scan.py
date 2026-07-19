@@ -94,6 +94,27 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_missing_startup_server_daemon_token_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            map_path = root / "docs" / "runtime" / "RUNTIME_SURFACE_MAP.md"
+            map_path.parent.mkdir(parents=True)
+            tokens = [
+                token
+                for surface in check_runtime_risk_scan.RUNTIME_MAP_SURFACES
+                if surface.name == "startup"
+                for token in surface.required_tokens
+                if token != "make server-daemon"
+            ]
+            map_path.write_text("\n".join(tokens), encoding="utf-8")
+
+            failures = check_runtime_risk_scan.check_runtime_surface_map(root)
+
+        self.assertIn(
+            "docs/runtime/RUNTIME_SURFACE_MAP.md: startup omits 'make server-daemon'",
+            failures,
+        )
+
     def test_current_operator_docs_use_canonical_lifecycle_names(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

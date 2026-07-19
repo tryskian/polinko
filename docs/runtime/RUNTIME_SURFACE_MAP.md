@@ -19,6 +19,8 @@ flowchart TD
     StartRoutine --> GitHubHealth["make github-health"]
     StartRoutine --> Doctor["make doctor-env"]
     StartRoutine --> WakeLock["make caffeinate + caffeinate-status"]
+    StartRoutine --> ServerDaemonStart["make server-daemon"]
+    ServerDaemonStart --> ServerDaemon["server-daemon"]
     StartRoutine --> ApiSmoke["make api-smoke"]
     ApiSmoke --> SmokeServer["temporary uvicorn server"]
     ApiSmoke --> SmokeDbs["isolated smoke SQLite paths"]
@@ -97,9 +99,12 @@ flowchart TD
 ## Reading the Map
 
 - Startup should stay narrow and chat-led: it reports GitHub health attention,
-  verifies environment health, starts the repo-managed wake lock, runs smoke
-  checks with isolated defaults, centralizes numbered step output, and stops
-  for alignment. VS Code keeps `make start` available as a manual task.
+  verifies environment health, starts the repo-managed wake lock, starts the
+  repo-managed server daemon, runs smoke checks with isolated defaults,
+  centralizes numbered step output, and stops for alignment. VS Code keeps
+  `make start` available as a manual task. Rendered UI checks use the
+  QA browser / DevTools MCP path; Playwright remains a separate explicit
+  local-browser helper surface.
 - Active validation and session closeout are separate surfaces:
   `make end-preflight` is branch-local validation, while `make end` is the
   session closeout routine from clean synced `main`. `make end-stop` is the
