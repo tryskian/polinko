@@ -146,7 +146,7 @@ if (issues.length === 0) {
   for (const token of [
     "About me",
     "I'm Krystian Fernando, an applied AI research engineer",
-    "Polinko uses binary eval gates determined by human judgement",
+    "Polinko's binary eval gates are determined by human judgement",
     "I lead Polinko's research, engineering direction, and final claims",
     "AI systems are collaborators, instruments, and part of what Polinko evaluates",
     "Read the research",
