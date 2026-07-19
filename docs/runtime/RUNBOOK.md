@@ -46,6 +46,8 @@ Use this doc for operator procedure.
    - `make start`
    - startup includes a GitHub health attention pass before local runtime
      checks
+   - startup starts the repo-managed server daemon before the isolated smoke
+     check
 2. Read in this order from the printed rehydrate prompt:
    - `docs/governance/CHARTER.md`
    - `docs/governance/STATE.md`
@@ -61,13 +63,16 @@ Use this doc for operator procedure.
 5. If on `main`, create or switch to a feature branch before edits.
 6. Reply in the morning ritual before implementation:
    - context: printed repo root, host vs devcontainer mode, active branch,
-     clean `main` or feature branch, and runtime health
+     clean `main` or feature branch, runtime health, and repo-managed server
+     state
    - kernel map: likely lanes from current docs/state, with one
      recommended first kernel
    - startup note: one small issue or risk only if something needs attention
 7. Treat the reply as the chat-first alignment pass.
 8. Wait for human alignment before implementation.
 9. After alignment, run one active kernel at a time and stop before broadening.
+10. For rendered UI checks, use the QA browser / DevTools MCP path. Playwright
+    stays a separate explicit local-browser helper surface.
 
 ## Environment Doctor
 

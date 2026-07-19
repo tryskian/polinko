@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 
 ## Current Truth
 
@@ -55,6 +55,10 @@ Last updated: 2026-07-17
     note, then waits for human alignment before implementation
   - morning startup step output is numbered through one routine helper so step
     labels and counts stay aligned as the routine changes
+  - morning startup starts the repo-managed server daemon before running the
+    isolated API smoke path, so operator work begins with a live local server
+  - rendered UI inspection uses the QA browser / DevTools MCP path; Playwright
+    remains a separate explicit local-browser helper surface
   - closeout progress derives from the declared `make end` step labels and
     explicit step dispatch so displayed counts stay aligned with the checks
     that actually run
@@ -960,7 +964,8 @@ Last updated: 2026-07-17
     before exit when the PID file write fails, preserving clean background
     state
   - VS Code keeps `make start` available as a manual task; startup stays
-    chat-led through the morning alignment pass
+    chat-led through the morning alignment pass and starts the repo-managed
+    server daemon before isolated smoke verification
   - `make doctor-env` reports both the active interpreter path and its source
     label, so repo `.venv`, override, and host fallback paths are visible
     during startup
