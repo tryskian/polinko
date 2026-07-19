@@ -22,6 +22,10 @@
   --section-title-size: clamp(1.75rem, 3.1vw, 3rem);
   --record-title-size: clamp(1.4rem, 2.3vw, 2.2rem);
   --duration: 180ms;
+  --theme-crossfade-duration: 180ms;
+  --theme-background-duration: 220ms;
+  --theme-foreground-duration: 1ms;
+  --theme-foreground-delay: 110ms;
 
   color-scheme: light;
 }
@@ -41,11 +45,36 @@
   box-sizing: border-box;
 }
 
-:root[data-theme-switching],
-:root[data-theme-switching] *,
-:root[data-theme-switching] *::before,
-:root[data-theme-switching] *::after {
-  transition: none !important;
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-theme-switching="view"]::view-transition-old(root),
+  :root[data-theme-switching="view"]::view-transition-new(root),
+  :root[data-theme-switching="view"]::view-transition-group(root) {
+    animation-duration: var(--theme-crossfade-duration);
+    animation-timing-function: ease;
+  }
+
+  :root[data-theme-switching="fallback"],
+  :root[data-theme-switching="fallback"] *,
+  :root[data-theme-switching="fallback"] *::before,
+  :root[data-theme-switching="fallback"] *::after,
+  :root[data-theme-switching="fallback"] .diagram-lightbox::backdrop {
+    transition-property: background-color, border-color, box-shadow, color, fill, stroke;
+    transition-duration:
+      var(--theme-background-duration),
+      var(--theme-background-duration),
+      var(--theme-background-duration),
+      var(--theme-foreground-duration),
+      var(--theme-foreground-duration),
+      var(--theme-foreground-duration);
+    transition-delay:
+      0ms,
+      0ms,
+      0ms,
+      var(--theme-foreground-delay),
+      var(--theme-foreground-delay),
+      var(--theme-foreground-delay);
+    transition-timing-function: ease, ease, ease, ease, ease, ease;
+  }
 }
 
 html {

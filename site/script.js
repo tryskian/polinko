@@ -1,7 +1,7 @@
 const root = document.documentElement;
 const button = document.querySelector("[data-theme-toggle]");
 const storageKey = "krystian-io-theme";
-const themeSwitchDelay = 220;
+const themeSwitchDelay = 320;
 let themeSwitchTimer = 0;
 
 function readTheme() {
@@ -30,13 +30,42 @@ function applyTheme(theme) {
   );
 }
 
-function applyThemeInstantly(theme) {
-  root.setAttribute("data-theme-switching", "");
-  applyTheme(theme);
+function canTransitionTheme() {
+  return (
+    !window.matchMedia ||
+    window.matchMedia("(prefers-reduced-motion: no-preference)").matches
+  );
+}
+
+function applyThemeWithTransition(theme) {
+  if (!canTransitionTheme()) {
+    applyTheme(theme);
+    return;
+  }
 
   if (themeSwitchTimer) {
     window.clearTimeout(themeSwitchTimer);
+    themeSwitchTimer = 0;
   }
+
+  if (document.startViewTransition) {
+    root.setAttribute("data-theme-switching", "view");
+
+    document
+      .startViewTransition(() => {
+        applyTheme(theme);
+      })
+      .finished.finally(() => {
+        root.removeAttribute("data-theme-switching");
+      });
+
+    return;
+  }
+
+  root.setAttribute("data-theme-switching", "fallback");
+  // Let the browser apply transition timing before the theme variables change.
+  root.getBoundingClientRect();
+  applyTheme(theme);
 
   themeSwitchTimer = window.setTimeout(() => {
     root.removeAttribute("data-theme-switching");
@@ -51,7 +80,7 @@ button?.addEventListener("click", () => {
   const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
 
   writeTheme(nextTheme);
-  applyThemeInstantly(nextTheme);
+  applyThemeWithTransition(nextTheme);
 });
 
 const header = document.querySelector(".site-header");

@@ -4,10 +4,10 @@ This directory contains the static website published at
 [krystian.io](https://www.krystian.io/).
 
 The site presents Polinko as Krystian Fernando's human-led AI evaluation
-research system: Polinko makes AI reliability observable by turning human
-judgement into binary pass/fail gates. It tracks failures against source
-evidence from prompt to output. The broader repository remains the research
-record; this directory is the website layer.
+research system: Polinko uses binary eval gates determined by human judgement,
+using those signals to trace the pattern of its own behaviour as it is
+evaluated. The broader repository remains the research record; this directory
+is the website layer.
 
 ## Route contract
 
@@ -42,7 +42,7 @@ flowchart LR
   Project --> Research["Research lanes"]
   Research --> Evidence["Evidence"]
   Evidence --> Method["Method"]
-  Method --> Claim["AI reliability made observable"]
+  Method --> Claim["Behaviour traced through binary eval gates"]
 ```
 
 Supporting routes:
