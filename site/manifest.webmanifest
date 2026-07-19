@@ -1,7 +1,7 @@
 {
   "name": "krystian.io",
   "short_name": "krystian.io",
-  "description": "Polinko uses binary eval gates determined by human judgement, using those signals to trace the pattern of its own behaviour as it is evaluated.",
+  "description": "Polinko's binary eval gates are determined by human judgement, generating signals that trace the pattern of its own behaviour as it's evaluated.",
   "start_url": "/",
   "scope": "/",
   "display": "minimal-ui",
