@@ -1,7 +1,7 @@
 {
   "name": "krystian.io",
   "short_name": "krystian.io",
-  "description": "Polinko makes AI reliability observable through human judgement, binary pass/fail gates, and source evidence.",
+  "description": "Polinko uses binary eval gates determined by human judgement, using those signals to trace the pattern of its own behaviour as it is evaluated.",
   "start_url": "/",
   "scope": "/",
   "display": "minimal-ui",
