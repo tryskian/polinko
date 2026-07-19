@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="author" content="Krystian Fernando" />
     <meta name="robots" content="index, follow" />
-    <meta name="description" content="Polinko's active AI evaluation research portfolio: OCR generalisation, co-reasoning, retrieval grounding, response behaviour, hallucination boundaries, and operator burden." />
+    <meta name="description" content="Polinko tracks six AI reliability research lanes with source-tied evidence boundaries: OCR, co-reasoning, retrieval, response behaviour, hallucination, and operator burden." />
     <meta name="keywords" content="Polinko research, AI evaluation, OCR evaluation, co-reasoning, retrieval grounding, hallucination boundaries, operator burden" />
     <link rel="canonical" href="https://www.krystian.io/research/" />
     <meta property="og:site_name" content="krystian.io" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Polinko research portfolio | krystian.io" />
-    <meta property="og:description" content="Polinko's active AI evaluation research portfolio: OCR generalisation, co-reasoning, retrieval grounding, response behaviour, hallucination boundaries, and operator burden." />
+    <meta property="og:description" content="Polinko tracks six AI reliability research lanes with source-tied evidence boundaries: OCR, co-reasoning, retrieval, response behaviour, hallucination, and operator burden." />
     <meta property="og:url" content="https://www.krystian.io/research/" />
     <meta property="og:image" content="https://www.krystian.io/favicon.png" />
     <meta property="og:image:alt" content="Krystian Fernando monogram" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Polinko research portfolio | krystian.io" />
-    <meta name="twitter:description" content="Polinko's active AI evaluation research portfolio: OCR generalisation, co-reasoning, retrieval grounding, response behaviour, hallucination boundaries, and operator burden." />
+    <meta name="twitter:description" content="Polinko tracks six AI reliability research lanes with source-tied evidence boundaries: OCR, co-reasoning, retrieval, response behaviour, hallucination, and operator burden." />
     <meta name="twitter:image" content="https://www.krystian.io/favicon.png" />
     <meta name="theme-color" content="#ffffff" />
     <title>Polinko research portfolio | krystian.io</title>
@@ -67,26 +67,28 @@
       <section class="page-hero section-grid" aria-labelledby="research-title">
         <div class="section-label">Research portfolio</div>
         <div class="hero-main">
-          <h1 id="research-title">Polinko currently tracks six behavioural research lanes.</h1>
+          <h1 id="research-title">Polinko tracks six current research lanes.</h1>
           <p class="hero-lede">
-            The lanes differ in maturity and purpose. Some have stable tracked
-            evals, some are promoted or operationalised, and one remains deliberately
-            thin. Their status records the evidence each lane has earned.
+            Each lane asks a reliability question and names the evidence
+            boundary behind the current read. Counts live in the evidence
+            record; gate logic lives in the method.
           </p>
+          <div class="hero-actions">
+            <a class="text-link" href="/evidence/">Review the evidence</a>
+            <a class="text-link" href="/method/">Read the method</a>
+          </div>
         </div>
       </section>
 
       <section class="section-grid" aria-labelledby="status-title">
         <div class="section-label">How to read status</div>
         <div>
-          <h2 id="status-title">Status describes maturity, not importance.</h2>
+          <h2 id="status-title">Status names what the evidence can carry right now.</h2>
           <dl class="status-key">
             <div><dt>Stable baseline</dt><dd>Repeatable on the current set, with the next pressure boundary named explicitly.</dd></div>
             <div><dt>Promoted</dt><dd>A tracked lane has enough repeated signal to support a current research conclusion.</dd></div>
             <div><dt>Operationalised</dt><dd>A bounded behaviour is tested through repeatable cases and reports.</dd></div>
             <div><dt>Thin</dt><dd>Distinct evidence exists, but the lane is still too narrow for a stronger claim.</dd></div>
-            <div><dt>Staged</dt><dd>A method contract is defined before new evidence is cut.</dd></div>
-            <div><dt>Historical</dt><dd>The idea remains in the record but is no longer part of the current method.</dd></div>
           </dl>
         </div>
       </section>
@@ -102,9 +104,9 @@
         <div class="record-body">
           <div></div>
           <div>
-            <div class="record-field"><p class="field-label">Current read</p><p>The current image set is stable: 25/25 growth cases, 16/16 focus cases, and no active fail-history cases. This is the baseline for broader generalisation tests.</p></div>
-            <div class="record-field"><p class="field-label">Evidence boundary</p><p>Current-set replay does not establish broad OCR robustness. New layouts, crops, contrast levels, density, and ambiguous visual cues remain untested.</p></div>
-            <div class="record-field"><p class="field-label">Next test</p><p>Curate a broader case set while keeping the OCR runtime and first <code>pass / fail</code> gate fixed. Failed cases are then retained as in-scope evidence or evicted as malformed, duplicate, or noisy source material.</p></div>
+            <div class="record-field"><p class="field-label">Current read</p><p>The current image set is stable across growth and focus replay. That stability becomes the baseline for broader generalisation tests.</p></div>
+            <div class="record-field"><p class="field-label">Limit</p><p>Current-set replay establishes current-set stability. New layouts, crops, contrast levels, density, and ambiguous visual cues remain the next pressure boundary.</p></div>
+            <div class="record-field"><p class="field-label">Next test</p><p>Curate a broader image set while keeping the OCR runtime and first <code>pass / fail</code> gate fixed.</p></div>
           </div>
         </div>
         <p class="record-source"><a class="source-link" href="https://github.com/tryskian/polinko/blob/main/docs/research/beta_2_3_2026-05-16.md">Source: Beta 2.3 snapshot</a></p>
@@ -121,10 +123,10 @@
         <div class="record-body">
           <div></div>
           <div>
-            <div class="record-field"><p class="field-label">Current read</p><p>Co-reasoning is the first promoted non-OCR lane. Its tracked surface covers flexible constraint retention, mid-thread mode shifts, bounded style adaptation, grounded playful abstraction, and collaboration that does more than summarise.</p></div>
-            <div class="record-field"><p class="field-label">Evidence</p><p>The current tracked style surface closed at 14/14 with high confidence across all cases.</p></div>
-            <div class="record-field"><p class="field-label">Boundary</p><p>The result applies to the tracked stress cases. Broader collaboration quality, creativity, and user satisfaction remain outside this lane.</p></div>
-            <div class="record-field"><p class="field-label">Next move</p><p>Keep weaker export cues below claim status until repeated evidence earns promotion.</p></div>
+            <div class="record-field"><p class="field-label">Current read</p><p>Co-reasoning is the first promoted non-OCR lane. It covers flexible constraint retention, mid-thread mode shifts, bounded style adaptation, grounded playful abstraction, and collaboration that does more than summarise.</p></div>
+            <div class="record-field"><p class="field-label">Evidence signal</p><p>The evidence record shows a clean promoted style lane across all tracked stress cases.</p></div>
+            <div class="record-field"><p class="field-label">Limit</p><p>The result applies to the tracked stress cases. Broader collaboration quality, creativity, and user satisfaction remain outside this lane.</p></div>
+            <div class="record-field"><p class="field-label">Next pressure</p><p>A distinct collaboration pressure can expand the lane once repeated evidence appears.</p></div>
           </div>
         </div>
         <p class="record-source"><a class="source-link" href="https://github.com/tryskian/polinko/blob/main/docs/research/co-reasoning-promotion-2026-05-08.md">Source: Co-reasoning promotion snapshot</a></p>
@@ -141,10 +143,10 @@
         <div class="record-body">
           <div></div>
           <div>
-            <div class="record-field"><p class="field-label">Current read</p><p>Retrieval is operationalised across two connected surfaces: global retrieval and file search. The tracked cases include OCR-seeded recall, session isolation, PDF-grounded lookup, scoped search, and image-context smoke.</p></div>
-            <div class="record-field"><p class="field-label">Evidence</p><p>The tracked snapshot reports 12/12 retrieval passes and 5/5 file-search passes, with zero recorded miss or leak in that run.</p></div>
-            <div class="record-field"><p class="field-label">Boundary</p><p>This is a bounded functional result. Privacy and security assurance require separate tests.</p></div>
-            <div class="record-field"><p class="field-label">Next move</p><p>Keep the lane stable until a distinct miss, leak, or source-grounding pressure earns another investigation.</p></div>
+            <div class="record-field"><p class="field-label">Current read</p><p>Retrieval is operationalised across global retrieval and file search. The cases include OCR-seeded recall, session isolation, PDF-grounded lookup, scoped search, and image-context smoke.</p></div>
+            <div class="record-field"><p class="field-label">Evidence signal</p><p>The evidence record includes retrieval and file-search snapshots with explicit miss and leak checks.</p></div>
+            <div class="record-field"><p class="field-label">Limit</p><p>This is a bounded functional result. Privacy and security assurance require separate tests.</p></div>
+            <div class="record-field"><p class="field-label">Next pressure</p><p>A distinct miss, leak, or grounding pressure would reopen the lane.</p></div>
           </div>
         </div>
         <p class="record-source"><a class="source-link" href="https://github.com/tryskian/polinko/blob/main/docs/research/retrieval-grounding-2026-03-28.md">Source: Retrieval grounding snapshot</a></p>
@@ -161,10 +163,10 @@
         <div class="record-body">
           <div></div>
           <div>
-            <div class="record-field"><p class="field-label">Current read</p><p>The lane measures concrete behaviours: absence of false action claims after repo requests, explicit uncertainty when context is missing, avoidance of invented live verification, refusal of pretended memory, and bounded role behaviour.</p></div>
-            <div class="record-field"><p class="field-label">Evidence</p><p>The tracked snapshot closed at 7/7. One case failed on its first attempt before recovering on the next two attempts, and that wobble remains visible.</p></div>
-            <div class="record-field"><p class="field-label">Boundary</p><p>The cases demonstrate bounded response behaviour under a deterministic surface. Broader personality and safety profiles remain outside scope.</p></div>
-            <div class="record-field"><p class="field-label">Next move</p><p>Widen only when a distinct response failure family appears. Keep recovered instability visible inside the final pass count.</p></div>
+            <div class="record-field"><p class="field-label">Current read</p><p>The lane measures concrete behaviours after repo requests: false action claims, uncertainty when context is missing, invented live verification, pretended memory, and bounded role behaviour. It also tests directness.</p></div>
+            <div class="record-field"><p class="field-label">Evidence signal</p><p>The evidence record preserves a clean final run and one recovered first-attempt failure.</p></div>
+            <div class="record-field"><p class="field-label">Limit</p><p>The cases demonstrate bounded response behaviour under deterministic checks. Broader personality and safety profiles remain outside scope.</p></div>
+            <div class="record-field"><p class="field-label">Next pressure</p><p>A distinct response-behaviour pressure can widen the lane while recovered instability stays visible.</p></div>
           </div>
         </div>
         <p class="record-source"><a class="source-link" href="https://github.com/tryskian/polinko/blob/main/docs/research/response-behaviour-stability-2026-04-25.md">Source: Response-behaviour stability snapshot</a></p>
@@ -182,9 +184,9 @@
           <div></div>
           <div>
             <div class="record-field"><p class="field-label">Current read</p><p>The tracked lane covers invented events, relationship-motive guesses, archive-lore authorship claims, and fabricated archive-discipline records.</p></div>
-            <div class="record-field"><p class="field-label">Evidence</p><p>The tracked surface closed at 9/9 across nine cases, including two export-backed invention families.</p></div>
-            <div class="record-field"><p class="field-label">Boundary</p><p>The result keeps hallucination as an active boundary while showing that one binary gate holds across a defined set of unsupported claim shapes.</p></div>
-            <div class="record-field"><p class="field-label">Next move</p><p>Promote only genuinely distinct invention families. Duplicate variants should stay grouped rather than broaden coverage.</p></div>
+            <div class="record-field"><p class="field-label">Evidence signal</p><p>The evidence record shows the same gate holding across selected unsupported invention families.</p></div>
+            <div class="record-field"><p class="field-label">Limit</p><p>The result keeps hallucination as an active boundary while showing that one binary gate holds across a defined set of unsupported claim shapes.</p></div>
+            <div class="record-field"><p class="field-label">Next pressure</p><p>Distinct invention families can promote the lane. Grouped duplicate variants preserve the coverage boundary.</p></div>
           </div>
         </div>
         <p class="record-source"><a class="source-link" href="https://github.com/tryskian/polinko/blob/main/docs/research/hallucination-boundary-promotion-2026-05-12.md">Source: Hallucination-boundary promotion</a></p>
@@ -202,9 +204,9 @@
           <div></div>
           <div>
             <div class="record-field"><p class="field-label">Current read</p><p>Low-burden execution can hold under sparse-control, raw-pull, protocol-lock, and exact-output boundaries. Real failure pressure appears when the system drifts into interpretation or advice outside the task.</p></div>
-            <div class="record-field"><p class="field-label">Evidence</p><p>The current row-local surface contains four pass anchors, two retained fail rows, and one evicted fail row.</p></div>
-            <div class="record-field"><p class="field-label">Boundary</p><p>The lane is narrow. Its current backlog is dominated by duplicate families, so more rows would create false breadth rather than stronger evidence.</p></div>
-            <div class="record-field"><p class="field-label">Next move</p><p>Wait for a distinct task shape or improve the visibility of the current cases. Keep duplicate examples out of fresh evidence.</p></div>
+            <div class="record-field"><p class="field-label">Evidence signal</p><p>The evidence record includes successful low-burden cases, retained failures, and one duplicate or noisy case removed from the set.</p></div>
+            <div class="record-field"><p class="field-label">Limit</p><p>The lane is narrow. The current backlog is dominated by duplicate families, so more rows would make the lane look wider than its evidence.</p></div>
+            <div class="record-field"><p class="field-label">Next pressure</p><p>A distinct task shape or clearer current-case visibility would justify reopening the lane. Duplicate examples stay grouped.</p></div>
           </div>
         </div>
         <p class="record-source"><a class="source-link" href="https://github.com/tryskian/polinko/blob/main/docs/research/operator-burden-signal-shape-2026-05-12.md">Source: Operator burden signal shape</a></p>
@@ -213,13 +215,16 @@
       <section class="section-grid" aria-labelledby="forward-method-title">
         <div class="section-label">Forward method</div>
         <div>
-          <h2 id="forward-method-title">New work stays source-first before a lane earns a claim.</h2>
+          <h2 id="forward-method-title">Evidence and method are the next reading steps.</h2>
           <p>
-            The active research path keeps source artefacts, row or case
-            judgements, exclusions, and lane summaries connected before any new
-            result is promoted.
+            Use the evidence page for current counts, source notes, limitations,
+            and retained failures. Use the method page for the human-judged
+            binary gate that keeps each claim bounded.
           </p>
-          <p><a class="text-link" href="/method/">Read the source-first method</a></p>
+          <p>
+            <a class="text-link" href="/evidence/">Review the evidence record</a>
+            <a class="text-link" href="/method/">Read the method</a>
+          </p>
         </div>
       </section>
     </main>

@@ -4,12 +4,14 @@ This directory contains the static website published at
 [krystian.io](https://www.krystian.io/).
 
 The site presents Polinko as Krystian Fernando's human-led AI evaluation
-research system. The broader repository remains the research surface; this
-directory is the public website layer.
+research system: Polinko makes AI reliability observable by turning human
+judgement into binary pass/fail gates. It tracks failures against source
+evidence from prompt to output. The broader repository remains the research
+record; this directory is the website layer.
 
 ## Route contract
 
-The public reader path is:
+The reader path is:
 
 ```text
 / -> /research/ -> /evidence/ -> /method/
@@ -20,7 +22,7 @@ flowchart TD
   Home["/ \nAbout Me\nKrystian, authorship, why Polinko exists"]
   Research["/research/ \nActive Polinko research lanes"]
   Evidence["/evidence/ \nTracked results, counts, source notes, boundaries"]
-  Method["/method/ \nBinary gates, source-first process, claim logic"]
+  Method["/method/ \nHuman judgement, binary gates, source evidence"]
   Diagrams["/diagrams/ \nVisual support for evidence and method"]
   About["/about/ \nLegacy compatibility route"]
 
@@ -40,18 +42,18 @@ flowchart LR
   Project --> Research["Research lanes"]
   Research --> Evidence["Evidence"]
   Evidence --> Method["Method"]
-  Method --> Claim["Bounded public claim"]
+  Method --> Claim["AI reliability made observable"]
 ```
 
 Supporting routes:
 
 - `/` owns Krystian, authorship, collaboration, and why Polinko exists.
-- `/diagrams/` owns visual support tied back to the public pages.
+- `/diagrams/` owns visual support tied back to the website pages.
 - `/about/` redirects to `/` for compatibility with older links.
 
-The homepage should introduce Krystian first, then Polinko. Detailed research
-lanes belong on `/research/`, result counts and source notes belong on
-`/evidence/`, and method mechanics belong on `/method/`.
+The homepage introduces Krystian first, then Polinko. Detailed research lanes
+belong on `/research/`, result counts and source notes belong on
+`/evidence/`, and human-judged binary gate mechanics belong on `/method/`.
 
 ## Build
 

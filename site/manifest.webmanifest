@@ -1,7 +1,7 @@
 {
   "name": "krystian.io",
   "short_name": "krystian.io",
-  "description": "Krystian Fernando's applied AI research site for Polinko.",
+  "description": "Polinko makes AI reliability observable through human judgement, binary pass/fail gates, and source evidence.",
   "start_url": "/",
   "scope": "/",
   "display": "minimal-ui",

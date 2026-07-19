@@ -146,8 +146,8 @@ if (issues.length === 0) {
   for (const token of [
     "About me",
     "I'm Krystian Fernando, an applied AI research engineer",
-    "I built Polinko to inspect the gap between a convincing response and a grounded one",
-    "I lead Polinko's research, engineering direction, and public claims",
+    "Polinko makes AI reliability observable",
+    "I lead Polinko's research, engineering direction, and final claims",
     "AI systems are collaborators, instruments, and part of what Polinko evaluates",
     "Read the research",
   ]) {

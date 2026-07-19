@@ -41,6 +41,13 @@
   box-sizing: border-box;
 }
 
+:root[data-theme-switching],
+:root[data-theme-switching] *,
+:root[data-theme-switching] *::before,
+:root[data-theme-switching] *::after {
+  transition: none !important;
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 5rem;
@@ -54,9 +61,6 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--ink);
-  transition:
-    background-color var(--duration) ease,
-    color var(--duration) ease;
 }
 
 body,
