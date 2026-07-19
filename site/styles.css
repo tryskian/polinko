@@ -11,7 +11,7 @@
   --font-mono: "config-mono-vf", ui-monospace, monospace;
   --page-pad: clamp(1.25rem, 3.5vw, 3rem);
   --section-gap: clamp(1.5rem, 4vw, 3rem);
-  --content-max: 84rem;
+  --content-max: 90rem;
   --measure: 58rem;
   --narrow-measure: 48rem;
   --label-size: clamp(0.75rem, 0.8vw, 0.86rem);
@@ -322,7 +322,7 @@ main {
 }
 
 .section-label {
-  padding-block-start: 0.3rem;
+  padding-block-start: 0;
   text-transform: uppercase;
 }
 
@@ -1207,11 +1207,11 @@ code {
 
   h1,
   .page-hero h1 {
-    max-inline-size: 12ch;
+    max-inline-size: 100%;
   }
 
   h2 {
-    max-inline-size: 22ch;
+    max-inline-size: 100%;
   }
 
   .record-body {
