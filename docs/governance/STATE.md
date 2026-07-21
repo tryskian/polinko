@@ -99,8 +99,8 @@ Last updated: 2026-07-20
   - OCR case judgment remains `pass` / `fail`
   - OCR-ready candidate cleanup happens upstream of OCR judgment
   - `make build-week-ocr-demo` runs a bounded one-case OCR gate, prints the
-    current OCR baseline and retained feedback cohorts, writes a local demo
-    summary, and stops the repo-managed server daemon on exit
+    selected source case, binary gate, live result, current OCR baseline, and
+    local demo summary, then stops the repo-managed server daemon on exit
 - Polinko is entering the next method beta from a frozen Beta 2.3 snapshot:
   - fail-first evaluation is the active posture
   - active maintenance kernels prioritise runtime/script hygiene and
