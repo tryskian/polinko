@@ -96,6 +96,10 @@ error() {
 	printf '[ERROR] %s\n' "$1"
 }
 
+codex_note() {
+	printf '[codex] %s\n' "$1"
+}
+
 summary() {
 	printf '\nSummary\n'
 	printf '[PASS]: %s\n' "$pass_total"
@@ -123,6 +127,7 @@ run_and_report() {
 
 echo "== Polinko Build Week demo =="
 echo "A visible terminal runbook: preflight -> API smoke -> OCR source -> binary eval -> artifacts."
+echo "presenter=codex"
 if demo_should_pause; then
 	echo "mode=interactive"
 	echo "pace=press Enter before each step"
@@ -131,6 +136,7 @@ else
 fi
 
 step "preflight"
+codex_note "First I check the repo state, case packet, and API key."
 pass "repo root: $POLINKO_REPO_ROOT"
 printf 'branch: %s\n' "$(git branch --show-current)"
 git status --short --branch
@@ -162,9 +168,11 @@ else
 fi
 
 step "API smoke"
+codex_note "Next I smoke-test the local API endpoints used by the eval runner."
 run_and_report "api-smoke completed" "$make_bin" --no-print-directory api-smoke
 
 step "OCR source preview"
+codex_note "Now I show the source artifact and gate before running OCR."
 mkdir -p .local/eval_reports
 if "$python_bin" - "$ocr_smoke_cases_path" "$ocr_smoke_max_cases" "$ocr_smoke_offset" <<'PY'
 from __future__ import annotations
@@ -229,9 +237,11 @@ else
 fi
 
 step "OCR binary eval"
+codex_note "Now I run the OCR eval. Each case resolves to PASS, FAIL, or ERROR."
 run_and_report "OCR smoke completed" "$make_bin" --no-print-directory build-week-ocr-smoke-demo
 
 step "OCR result counts"
+codex_note "Now I read the report back into counts so the result is visible at a glance."
 "$python_bin" - <<'PY' > .local/eval_reports/build_week_demo_ocr_counts.env
 from __future__ import annotations
 
@@ -262,8 +272,10 @@ if [ "$ocr_error" -eq 0 ]; then
 else
 	printf '[ERROR] OCR error cases: %s\n' "$ocr_error"
 fi
+codex_note "This run produced $ocr_pass passing OCR cases, $ocr_fail failures, and $ocr_error errors."
 
 step "evidence artifacts"
+codex_note "Then I check that the run left evidence artifacts, not just terminal output."
 for artifact in \
 	".local/eval_reports/build_week_ocr_smoke_demo.json" \
 	".local/eval_reports/build_week_ocr_smoke_demo.log"; do
@@ -275,6 +287,7 @@ for artifact in \
 done
 
 step "cleanup"
+codex_note "Finally I stop the local server so the demo leaves the machine clean."
 if "$make_bin" --no-print-directory server-daemon-stop >/dev/null 2>&1; then
 	pass "server stopped"
 else
