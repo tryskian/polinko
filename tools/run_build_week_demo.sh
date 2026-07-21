@@ -15,14 +15,46 @@ make_bin=$(polinko_require_make_command "build-week demo")
 python_bin=$(polinko_default_python_bin)
 
 DEMO_TOTAL_STEPS=6
+demo_pause=${BUILD_WEEK_DEMO_PAUSE:-auto}
 demo_step_number=0
 pass_total=0
 fail_total=0
 error_total=0
 
+demo_should_pause() {
+	case "$demo_pause" in
+		1 | true | TRUE | yes | YES)
+			return 0
+			;;
+		0 | false | FALSE | no | NO)
+			return 1
+			;;
+		auto | "")
+			[ -t 0 ] && [ -t 1 ]
+			return
+			;;
+		*)
+			printf '[ERROR] invalid BUILD_WEEK_DEMO_PAUSE value: %s\n' "$demo_pause" >&2
+			printf 'Use auto, 1, or 0.\n' >&2
+			exit 2
+			;;
+	esac
+}
+
+demo_pause_for_step() {
+	local label=$1
+	if demo_should_pause; then
+		printf '[demo] ready: %s\n' "$label"
+		printf '[demo] press Enter to run this step...'
+		read -r _ || true
+	fi
+}
+
 step() {
+	local label=$1
 	demo_step_number=$((demo_step_number + 1))
-	printf '\n[demo] %s/%s %s\n' "$demo_step_number" "$DEMO_TOTAL_STEPS" "$1"
+	printf '\n[demo] %s/%s %s\n' "$demo_step_number" "$DEMO_TOTAL_STEPS" "$label"
+	demo_pause_for_step "$label"
 }
 
 pass() {
@@ -67,6 +99,12 @@ run_and_report() {
 
 echo "== Polinko Build Week demo =="
 echo "A visible terminal runbook: preflight -> API smoke -> OCR binary eval -> artifacts."
+if demo_should_pause; then
+	echo "mode=interactive"
+	echo "pace=press Enter before each step"
+else
+	echo "mode=continuous"
+fi
 
 step "preflight"
 pass "repo root: $POLINKO_REPO_ROOT"
