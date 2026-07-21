@@ -101,6 +101,10 @@ Last updated: 2026-07-20
   - `make build-week-ocr-demo` runs a bounded one-case OCR gate, prints the
     selected source case, binary gate, live result, current OCR baseline, and
     local demo summary, then stops the repo-managed server daemon on exit
+  - `make build-week-ocr-notebook-demo` executes the local Build Week OCR
+    notebook demo, writes an executed notebook and HTML artifact under
+    `.local/notebooks/build-week-ocr-demo/`, and opens the HTML unless
+    `BUILD_WEEK_OCR_NOTEBOOK_OPEN=0`
 - Polinko is entering the next method beta from a frozen Beta 2.3 snapshot:
   - fail-first evaluation is the active posture
   - active maintenance kernels prioritise runtime/script hygiene and
