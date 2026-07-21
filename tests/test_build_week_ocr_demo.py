@@ -13,8 +13,23 @@ class BuildWeekOcrDemoTests(unittest.TestCase):
     def test_build_week_demo_make_target_uses_runner(self) -> None:
         makefile = _read("makefiles/evals/core/reports.mk")
 
+        self.assertIn("build-week-demo:", makefile)
+        self.assertIn("bash ./tools/run_build_week_demo.sh", makefile)
         self.assertIn("build-week-ocr-demo:", makefile)
         self.assertIn("bash ./tools/run_build_week_ocr_demo.sh", makefile)
+        self.assertIn("build-week-ocr-notebook-demo:", makefile)
+        self.assertIn("bash ./tools/run_build_week_ocr_notebook_demo.sh", makefile)
+        self.assertIn("build-week-ocr-smoke-demo:", makefile)
+        self.assertIn("bash ./tools/run_build_week_ocr_smoke_demo.sh", makefile)
+
+    def test_build_week_demo_runner_surfaces_are_tracked(self) -> None:
+        for rel_path in (
+            "tools/run_build_week_demo.sh",
+            "tools/run_build_week_ocr_demo.sh",
+            "tools/run_build_week_ocr_notebook_demo.sh",
+            "tools/run_build_week_ocr_smoke_demo.sh",
+        ):
+            self.assertTrue((REPO_ROOT / rel_path).is_file(), rel_path)
 
     def test_build_week_demo_runner_is_bounded_and_self_cleaning(self) -> None:
         script = _read("tools/run_build_week_ocr_demo.sh")
