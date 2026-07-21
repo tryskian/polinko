@@ -560,8 +560,8 @@ Use this doc for operator procedure.
   - runs the Build Week screen-recording demo as a paced terminal runbook
   - steps through preflight, API smoke, OCR source preview, OCR binary eval,
     OCR counts, evidence artifacts, cleanup, and final PASS/FAIL/ERROR summary
-  - includes `[codex]` presenter notes so the terminal shows the Codex/operator
-    role around the real eval runner
+  - is intended to be run from a Codex CLI session so the live assistant
+    commentary can provide the operator narration around the real eval runner
   - in an interactive terminal, pauses before each step and opens the first OCR
     source image by default
   - continuous validation mode:

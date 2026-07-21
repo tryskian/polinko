@@ -102,10 +102,9 @@ Last updated: 2026-07-20
     numbered steps for preflight, API smoke, OCR source preview, OCR binary
     eval, OCR counts, evidence artifacts, cleanup, and final
     PASS/FAIL/ERROR summary
-  - `make build-week-demo` includes a `[codex]` presenter layer so the demo can
-    show Codex narrating the source artifact, binary gate, eval run, result
-    counts, evidence artifacts, and cleanup while the real CLI smoke commands
-    execute
+  - when run from Codex CLI, the live assistant commentary provides the demo
+    narration while `make build-week-demo` provides the source preview,
+    binary gate output, counts, artifacts, and cleanup
   - in an interactive terminal, `make build-week-demo` pauses before each step
     and opens the first OCR source image by default; set
     `BUILD_WEEK_DEMO_PAUSE=0 BUILD_WEEK_DEMO_OPEN_OCR_SOURCE=0` for continuous
