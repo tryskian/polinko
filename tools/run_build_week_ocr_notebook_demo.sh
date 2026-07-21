@@ -4,6 +4,8 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
+# shellcheck source=tools/shell_command_common.sh
+source "$script_dir/shell_command_common.sh"
 # shellcheck source=tools/python_runtime.sh
 source "$script_dir/python_runtime.sh"
 
@@ -71,7 +73,7 @@ echo "executed_notebook=$executed_path"
 echo "html=$html_path"
 
 if [ "$open_output" != "0" ]; then
-	if command -v open >/dev/null 2>&1; then
+	if polinko_command_available open; then
 		echo "opening_html=yes"
 		open "$html_path"
 	else

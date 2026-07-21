@@ -215,7 +215,7 @@ then
 	ocr_source_image=$(cat .local/eval_reports/build_week_demo_ocr_source_path.txt)
 	pass "OCR source image resolved"
 	if demo_should_open_ocr_source; then
-		if command -v open >/dev/null 2>&1; then
+		if polinko_command_available open; then
 			open "$ocr_source_image"
 			pass "OCR source image opened"
 		else
