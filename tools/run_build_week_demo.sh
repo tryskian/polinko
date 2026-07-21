@@ -19,7 +19,6 @@ ocr_smoke_offset=${BUILD_WEEK_OCR_SMOKE_OFFSET:-0}
 
 DEMO_TOTAL_STEPS=7
 demo_pause=${BUILD_WEEK_DEMO_PAUSE:-auto}
-demo_open_ocr_source=${BUILD_WEEK_DEMO_OPEN_OCR_SOURCE:-auto}
 demo_step_number=0
 pass_total=0
 fail_total=0
@@ -52,26 +51,6 @@ demo_pause_for_step() {
 		printf '[demo] press Enter to run this step...'
 		read -r _ || true
 	fi
-}
-
-demo_should_open_ocr_source() {
-	case "$demo_open_ocr_source" in
-		1 | true | TRUE | yes | YES)
-			return 0
-			;;
-		0 | false | FALSE | no | NO)
-			return 1
-			;;
-		auto | "")
-			demo_should_pause
-			return
-			;;
-		*)
-			printf '[ERROR] invalid BUILD_WEEK_DEMO_OPEN_OCR_SOURCE value: %s\n' "$demo_open_ocr_source" >&2
-			printf 'Use auto, 1, or 0.\n' >&2
-			exit 2
-			;;
-	esac
 }
 
 step() {
@@ -186,8 +165,6 @@ if offset < 0 or offset >= len(cases):
 case = cases[offset]
 image_path = str(case.get("image_path", "")).strip()
 resolved_image = resolve_export_ref(image_path)
-preview_path = Path(".local/eval_reports/build_week_demo_ocr_source_path.txt")
-preview_path.write_text(str(resolved_image), encoding="utf-8")
 
 case_id = str(case.get("id", "")).strip()
 source_name = str(case.get("source_name") or image_path or case_id).strip()
@@ -212,16 +189,7 @@ if not resolved_image.is_file():
     raise SystemExit(f"resolved image does not exist: {resolved_image}")
 PY
 then
-	ocr_source_image=$(cat .local/eval_reports/build_week_demo_ocr_source_path.txt)
 	pass "OCR source image resolved"
-	if demo_should_open_ocr_source; then
-		if polinko_command_available open; then
-			open "$ocr_source_image"
-			pass "OCR source image opened"
-		else
-			error "open command unavailable; image path printed above"
-		fi
-	fi
 else
 	fail "OCR source preview failed"
 	summary
