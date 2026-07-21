@@ -105,6 +105,9 @@ Last updated: 2026-07-20
     notebook demo, writes an executed notebook and HTML artifact under
     `.local/notebooks/build-week-ocr-demo/`, and opens the HTML unless
     `BUILD_WEEK_OCR_NOTEBOOK_OPEN=0`
+  - `make build-week-ocr-smoke-demo` runs the same OCR lane as a terminal-first
+    smoke demo, streaming one `[PASS]`, `[FAIL]`, or `[ERROR]` line per case
+    and ending with status counts plus local report/log paths
 - Polinko is entering the next method beta from a frozen Beta 2.3 snapshot:
   - fail-first evaluation is the active posture
   - active maintenance kernels prioritise runtime/script hygiene and
