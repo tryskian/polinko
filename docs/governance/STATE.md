@@ -811,7 +811,8 @@ Last updated: 2026-07-21
     Dependabot alert closure may lag until GitHub refreshes the dependency
     graph
   - root Node security locks are tracked through `package-lock.json`; current
-    refreshed transitive pins include `undici==7.28.0`
+    refreshed transitive pins include `undici==7.28.0`,
+    `dompurify==3.4.12`, `markdown-it==14.3.0`, and `linkify-it==5.0.2`
   - GitHub CI runs on pull requests and on pushes to `main`; feature-branch
     pushes rely on the pull-request gate to avoid duplicate red runs, and CI
     plus dependency-review workflows cancel superseded runs when a newer commit

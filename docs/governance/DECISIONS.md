@@ -6968,3 +6968,20 @@ or branch history instead.
   terminal metadata and never opens the source image in another application.
 - Why: The terminal-first view makes the working process, binary gate, and
   evidence trail readable together without an overlapping image window.
+
+## D-413: Refresh stale Node security overrides
+
+- Date: `2026-07-21`
+- Category: `dependency_management`
+- Tags: `npm_audit`, `package_lock`, `overrides`, `security`
+- Human-led: The human lead saw the Node override and lockfile failure surface
+  during a demo closeout run.
+- Engineer implementation: Update the root `package.json` overrides for
+  `dompurify` and `markdown-it`, then regenerate `package-lock.json`.
+- Decision: Root Node overrides remain an audited security surface. When an
+  override falls inside a vulnerable range, refresh the override and lockfile
+  rather than weakening the Node audit gate.
+- Why: `npm audit` flagged `dompurify<=3.4.11` and `linkify-it<=5.0.1`.
+  Updating `dompurify` to `3.4.12` and `markdown-it` to `14.3.0` moves the
+  resolved `linkify-it` dependency to `5.0.2` while preserving the existing
+  root tooling workflow.
