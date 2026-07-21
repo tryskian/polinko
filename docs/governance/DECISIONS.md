@@ -6951,3 +6951,20 @@ or branch history instead.
 - Why: Startup should leave the operator with a live repo-owned server while
   preserving isolated smoke verification and avoiding accidental drift back to
   a Playwright-first browser QA path.
+
+## D-412: Keep the Build Week source preview in the terminal
+
+- Date: `2026-07-21`
+- Category: `operator_workflow`
+- Tags: `build_week`, `demo`, `ocr`, `terminal`, `screen_recording`
+- Human-led: The human lead found that the opened OCR source image was not
+  legible in the recording layout and covered the visible Codex task progress,
+  and confirmed that the popup functionality will not be used.
+- Engineer implementation: Remove the image-opening configuration and command
+  from `tools/run_build_week_demo.sh`, preserve the resolved source path and
+  case signals in terminal output, and add focused regression coverage for the
+  no-popup contract.
+- Decision: `make build-week-demo` keeps OCR source evidence visible as
+  terminal metadata and never opens the source image in another application.
+- Why: The terminal-first view makes the working process, binary gate, and
+  evidence trail readable together without an overlapping image window.

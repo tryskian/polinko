@@ -106,9 +106,8 @@ Last updated: 2026-07-21
     narration while `make build-week-demo` provides the source preview,
     binary gate output, counts, artifacts, and cleanup
   - in an interactive terminal, `make build-week-demo` pauses before each step
-    and opens the first OCR source image by default; set
-    `BUILD_WEEK_DEMO_PAUSE=0 BUILD_WEEK_DEMO_OPEN_OCR_SOURCE=0` for continuous
-    validation runs
+    and keeps source preview details in the terminal without opening the source
+    image; set `BUILD_WEEK_DEMO_PAUSE=0` for continuous validation runs
   - `make build-week-ocr-demo` runs a bounded one-case OCR gate, prints the
     selected source case, binary gate, live result, current OCR baseline, and
     local demo summary, then stops the repo-managed server daemon on exit

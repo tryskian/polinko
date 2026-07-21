@@ -31,6 +31,14 @@ class BuildWeekOcrDemoTests(unittest.TestCase):
         ):
             self.assertTrue((REPO_ROOT / rel_path).is_file(), rel_path)
 
+    def test_build_week_demo_keeps_source_preview_in_terminal(self) -> None:
+        script = _read("tools/run_build_week_demo.sh")
+
+        self.assertIn('print(f"image={resolved_image}")', script)
+        self.assertIn('pass "OCR source image resolved"', script)
+        self.assertNotIn("BUILD_WEEK_DEMO_OPEN_OCR_SOURCE", script)
+        self.assertNotIn('open "$ocr_source_image"', script)
+
     def test_build_week_demo_runner_is_bounded_and_self_cleaning(self) -> None:
         script = _read("tools/run_build_week_ocr_demo.sh")
 

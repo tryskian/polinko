@@ -562,10 +562,10 @@ Use this doc for operator procedure.
     OCR counts, evidence artifacts, cleanup, and final PASS/FAIL/ERROR summary
   - is intended to be run from a Codex CLI session so the live assistant
     commentary can provide the operator narration around the real eval runner
-  - in an interactive terminal, pauses before each step and opens the first OCR
-    source image by default
+  - in an interactive terminal, pauses before each step and keeps the OCR
+    source preview in the terminal without opening the source image
   - continuous validation mode:
-    `BUILD_WEEK_DEMO_PAUSE=0 BUILD_WEEK_DEMO_OPEN_OCR_SOURCE=0 make build-week-demo`
+    `BUILD_WEEK_DEMO_PAUSE=0 make build-week-demo`
 - `make build-week-ocr-smoke-demo`
   - runs the OCR lane as a terminal-first smoke demo with one `[PASS]`,
     `[FAIL]`, or `[ERROR]` line per selected case and local report/log paths
