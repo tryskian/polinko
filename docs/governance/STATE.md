@@ -99,8 +99,17 @@ Last updated: 2026-07-20
   - OCR case judgment remains `pass` / `fail`
   - OCR-ready candidate cleanup happens upstream of OCR judgment
   - `make build-week-demo` runs the Build Week terminal runbook with visible
-    numbered steps for preflight, API smoke, OCR binary eval, OCR counts,
-    evidence artifacts, cleanup, and final PASS/FAIL/ERROR summary
+    numbered steps for preflight, API smoke, OCR source preview, OCR binary
+    eval, OCR counts, evidence artifacts, cleanup, and final
+    PASS/FAIL/ERROR summary
+  - `make build-week-demo` includes a `[codex]` presenter layer so the demo can
+    show Codex narrating the source artifact, binary gate, eval run, result
+    counts, evidence artifacts, and cleanup while the real CLI smoke commands
+    execute
+  - in an interactive terminal, `make build-week-demo` pauses before each step
+    and opens the first OCR source image by default; set
+    `BUILD_WEEK_DEMO_PAUSE=0 BUILD_WEEK_DEMO_OPEN_OCR_SOURCE=0` for continuous
+    validation runs
   - `make build-week-ocr-demo` runs a bounded one-case OCR gate, prints the
     selected source case, binary gate, live result, current OCR baseline, and
     local demo summary, then stops the repo-managed server daemon on exit
