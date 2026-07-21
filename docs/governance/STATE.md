@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-07-19
+Last updated: 2026-07-20
 
 ## Current Truth
 
@@ -98,6 +98,9 @@ Last updated: 2026-07-19
   - release outcomes are `pass` / `fail`
   - OCR case judgment remains `pass` / `fail`
   - OCR-ready candidate cleanup happens upstream of OCR judgment
+  - `make build-week-ocr-demo` runs a bounded one-case OCR gate, prints the
+    current OCR baseline and retained feedback cohorts, writes a local demo
+    summary, and stops the repo-managed server daemon on exit
 - Polinko is entering the next method beta from a frozen Beta 2.3 snapshot:
   - fail-first evaluation is the active posture
   - active maintenance kernels prioritise runtime/script hygiene and
