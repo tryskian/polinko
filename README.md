@@ -30,6 +30,24 @@ repository is the research surface.
 The static website source lives in `site/`. Netlify builds it with
 `npm run build` and publishes `dist/`.
 
+## Built with Codex and GPT-5.6
+
+> [!IMPORTANT]
+> **Polinko is built entirely with Codex.** The project remains human-led:
+> Codex is the implementation and co-reasoning surface used to turn the
+> research method into code, eval infrastructure, documentation, and operator
+> workflows.
+
+GPT-5.6 was used throughout this Build Week iteration to:
+
+- help build [`make build-week-demo`](tools/run_build_week_demo.sh), the
+  repo-native recording script that runs the preflight, live OCR binary eval,
+  retained-evidence checks, and cleanup shown in the demo;
+- support daily repo audits and reports while Polinko is refactored and staged
+  for the next beta;
+- run the recorded workflow live inside the Codex CLI; and
+- help edit, clean, frame, and transcribe the final submission video.
+
 ## Research Question
 
 How can binary eval gates help separate coherent AI output from reliable AI
