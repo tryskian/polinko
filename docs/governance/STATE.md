@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
 
 ## Current Truth
 
@@ -98,9 +98,27 @@ Last updated: 2026-07-20
   - release outcomes are `pass` / `fail`
   - OCR case judgment remains `pass` / `fail`
   - OCR-ready candidate cleanup happens upstream of OCR judgment
+  - `make build-week-demo` runs the Build Week terminal runbook with visible
+    numbered steps for preflight, API smoke, OCR source preview, OCR binary
+    eval, OCR counts, evidence artifacts, cleanup, and final
+    PASS/FAIL/ERROR summary
+  - when run from Codex CLI, the live assistant commentary provides the demo
+    narration while `make build-week-demo` provides the source preview,
+    binary gate output, counts, artifacts, and cleanup
+  - in an interactive terminal, `make build-week-demo` pauses before each step
+    and opens the first OCR source image by default; set
+    `BUILD_WEEK_DEMO_PAUSE=0 BUILD_WEEK_DEMO_OPEN_OCR_SOURCE=0` for continuous
+    validation runs
   - `make build-week-ocr-demo` runs a bounded one-case OCR gate, prints the
-    current OCR baseline and retained feedback cohorts, writes a local demo
-    summary, and stops the repo-managed server daemon on exit
+    selected source case, binary gate, live result, current OCR baseline, and
+    local demo summary, then stops the repo-managed server daemon on exit
+  - `make build-week-ocr-notebook-demo` executes the local Build Week OCR
+    notebook demo, writes an executed notebook and HTML artifact under
+    `.local/notebooks/build-week-ocr-demo/`, and opens the HTML unless
+    `BUILD_WEEK_OCR_NOTEBOOK_OPEN=0`
+  - `make build-week-ocr-smoke-demo` runs the same OCR lane as a terminal-first
+    smoke demo, streaming one `[PASS]`, `[FAIL]`, or `[ERROR]` line per case
+    and ending with status counts plus local report/log paths
 - Polinko is entering the next method beta from a frozen Beta 2.3 snapshot:
   - fail-first evaluation is the active posture
   - active maintenance kernels prioritise runtime/script hygiene and
