@@ -13,9 +13,13 @@ polinko_cd_repo_root
 
 make_bin=$(polinko_require_make_command "build-week demo")
 python_bin=$(polinko_default_python_bin)
+ocr_smoke_cases_path=${BUILD_WEEK_OCR_SMOKE_CASES_PATH:-.local/eval_cases/ocr_transcript_cases_growth.json}
+ocr_smoke_max_cases=${BUILD_WEEK_OCR_SMOKE_CASES:-5}
+ocr_smoke_offset=${BUILD_WEEK_OCR_SMOKE_OFFSET:-0}
 
-DEMO_TOTAL_STEPS=6
+DEMO_TOTAL_STEPS=7
 demo_pause=${BUILD_WEEK_DEMO_PAUSE:-auto}
+demo_open_ocr_source=${BUILD_WEEK_DEMO_OPEN_OCR_SOURCE:-auto}
 demo_step_number=0
 pass_total=0
 fail_total=0
@@ -48,6 +52,26 @@ demo_pause_for_step() {
 		printf '[demo] press Enter to run this step...'
 		read -r _ || true
 	fi
+}
+
+demo_should_open_ocr_source() {
+	case "$demo_open_ocr_source" in
+		1 | true | TRUE | yes | YES)
+			return 0
+			;;
+		0 | false | FALSE | no | NO)
+			return 1
+			;;
+		auto | "")
+			demo_should_pause
+			return
+			;;
+		*)
+			printf '[ERROR] invalid BUILD_WEEK_DEMO_OPEN_OCR_SOURCE value: %s\n' "$demo_open_ocr_source" >&2
+			printf 'Use auto, 1, or 0.\n' >&2
+			exit 2
+			;;
+	esac
 }
 
 step() {
@@ -98,7 +122,7 @@ run_and_report() {
 }
 
 echo "== Polinko Build Week demo =="
-echo "A visible terminal runbook: preflight -> API smoke -> OCR binary eval -> artifacts."
+echo "A visible terminal runbook: preflight -> API smoke -> OCR source -> binary eval -> artifacts."
 if demo_should_pause; then
 	echo "mode=interactive"
 	echo "pace=press Enter before each step"
@@ -112,7 +136,7 @@ printf 'branch: %s\n' "$(git branch --show-current)"
 git status --short --branch
 pass "workspace context printed"
 
-if [ -f ".local/eval_cases/ocr_transcript_cases_growth.json" ]; then
+if [ -f "$ocr_smoke_cases_path" ]; then
 	pass "OCR growth case packet present"
 else
 	fail "OCR growth case packet missing"
@@ -139,6 +163,70 @@ fi
 
 step "API smoke"
 run_and_report "api-smoke completed" "$make_bin" --no-print-directory api-smoke
+
+step "OCR source preview"
+mkdir -p .local/eval_reports
+if "$python_bin" - "$ocr_smoke_cases_path" "$ocr_smoke_max_cases" "$ocr_smoke_offset" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+from tools.ocr_export_refs import resolve_export_ref
+
+cases_path = Path(sys.argv[1])
+max_cases = int(sys.argv[2])
+offset = int(sys.argv[3])
+payload = json.loads(cases_path.read_text(encoding="utf-8"))
+cases = payload["cases"] if isinstance(payload, dict) else payload
+if offset < 0 or offset >= len(cases):
+    raise SystemExit(f"offset {offset} is outside case packet length {len(cases)}")
+
+case = cases[offset]
+image_path = str(case.get("image_path", "")).strip()
+resolved_image = resolve_export_ref(image_path)
+preview_path = Path(".local/eval_reports/build_week_demo_ocr_source_path.txt")
+preview_path.write_text(str(resolved_image), encoding="utf-8")
+
+case_id = str(case.get("id", "")).strip()
+source_name = str(case.get("source_name") or image_path or case_id).strip()
+lane = str(case.get("lane", "")).strip()
+mode = str(case.get("transcription_mode", "")).strip()
+must_contain = [str(item) for item in case.get("must_contain_any", [])]
+must_not_contain = [str(item) for item in case.get("must_not_contain_words", [])]
+
+print(f"case={case_id}")
+print(f"batch={max_cases} OCR cases from offset {offset}")
+print(f"source={source_name}")
+print(f"image={resolved_image}")
+print(f"lane={lane}")
+print(f"mode={mode}")
+if must_contain:
+    print("pass signal=contains one expected anchor:")
+    print("  " + ", ".join(must_contain[:8]))
+if must_not_contain:
+    print("fail signal=contains blocked words:")
+    print("  " + ", ".join(must_not_contain[:8]))
+if not resolved_image.is_file():
+    raise SystemExit(f"resolved image does not exist: {resolved_image}")
+PY
+then
+	ocr_source_image=$(cat .local/eval_reports/build_week_demo_ocr_source_path.txt)
+	pass "OCR source image resolved"
+	if demo_should_open_ocr_source; then
+		if command -v open >/dev/null 2>&1; then
+			open "$ocr_source_image"
+			pass "OCR source image opened"
+		else
+			error "open command unavailable; image path printed above"
+		fi
+	fi
+else
+	fail "OCR source preview failed"
+	summary
+	exit 1
+fi
 
 step "OCR binary eval"
 run_and_report "OCR smoke completed" "$make_bin" --no-print-directory build-week-ocr-smoke-demo
