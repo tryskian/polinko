@@ -45,7 +45,7 @@ click==8.3.3
     # via
     #   pip-tools
     #   uvicorn
-cryptography==49.0.0
+cryptography==50.0.0
     # via pyjwt
 cyclonedx-python-lib==11.11.0
     # via pip-audit
