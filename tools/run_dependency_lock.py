@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+from pathlib import Path
 
 
 def emit_process_output(result: subprocess.CompletedProcess[str]) -> None:
@@ -66,12 +67,26 @@ def compile_lockfile(
     return result.returncode
 
 
-def verify_lockfile_clean(requirements_lock: str) -> int:
-    result = subprocess.run(
-        ["git", "diff", "--exit-code", "--", requirements_lock],
-        check=False,
+def read_lockfile_bytes(requirements_lock: str) -> bytes | None:
+    try:
+        return Path(requirements_lock).read_bytes()
+    except FileNotFoundError:
+        return None
+
+
+def verify_lockfile_unchanged(
+    requirements_lock: str, before_compile: bytes | None
+) -> int:
+    after_compile = read_lockfile_bytes(requirements_lock)
+    if after_compile == before_compile:
+        print(f"dependency-lock: {requirements_lock} is current")
+        return 0
+
+    print(
+        f"dependency-lock: {requirements_lock} changed after compile; "
+        "run make deps-lock and commit the generated lockfile"
     )
-    return result.returncode
+    return 1
 
 
 def run_dependency_lock(
@@ -92,6 +107,10 @@ def run_dependency_lock(
         if bootstrap_status != 0:
             return bootstrap_status
 
+    lockfile_before_compile = (
+        read_lockfile_bytes(requirements_lock) if check_lockfile else None
+    )
+
     compile_status = compile_lockfile(
         python=python,
         requirements_in=requirements_in,
@@ -101,10 +120,7 @@ def run_dependency_lock(
         return compile_status
 
     if check_lockfile:
-        diff_status = verify_lockfile_clean(requirements_lock)
-        if diff_status == 0:
-            print(f"dependency-lock: {requirements_lock} is current")
-        return diff_status
+        return verify_lockfile_unchanged(requirements_lock, lockfile_before_compile)
 
     return 0
 
@@ -136,7 +152,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--check-lockfile",
         action="store_true",
-        help="Fail when the generated lockfile differs from git.",
+        help="Fail when compiling changes the generated lockfile.",
     )
     args = parser.parse_args(argv)
     if args.ensure_pip_tools and not args.pip_tools_version:

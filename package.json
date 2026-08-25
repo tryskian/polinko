@@ -19,7 +19,7 @@
     "pyright": "1.1.411"
   },
   "overrides": {
-    "dompurify": "3.4.12",
+    "dompurify": "3.4.14",
     "markdown-it": "14.3.0",
     "ws": "8.21.0"
   }
