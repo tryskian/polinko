@@ -117,35 +117,80 @@ class RunDependencyLockTests(unittest.TestCase):
         self.assertEqual(status, 2)
         self.assertEqual(run.call_count, 2)
 
-    def test_check_mode_compiles_and_verifies_lockfile_diff(self) -> None:
+    def test_check_mode_compiles_and_verifies_lockfile_stability(self) -> None:
         compile_run = mock.Mock(returncode=0)
-        diff_run = mock.Mock(returncode=0)
 
         with mock.patch(
             "tools.run_dependency_lock.subprocess.run",
-            side_effect=[compile_run, diff_run],
+            return_value=compile_run,
         ) as run:
-            with mock.patch("builtins.print"):
-                status = run_dependency_lock.run_dependency_lock(
-                    python="python3",
-                    requirements_in="requirements.in",
-                    requirements_lock="requirements.txt",
-                    ensure_bootstrap=False,
-                    pip_tools_version=None,
-                    check_lockfile=True,
-                )
+            with mock.patch(
+                "tools.run_dependency_lock.read_lockfile_bytes",
+                side_effect=[b"locked", b"locked"],
+            ) as read_lock:
+                with mock.patch("builtins.print"):
+                    status = run_dependency_lock.run_dependency_lock(
+                        python="python3",
+                        requirements_in="requirements.in",
+                        requirements_lock="requirements.txt",
+                        ensure_bootstrap=False,
+                        pip_tools_version=None,
+                        check_lockfile=True,
+                    )
 
         self.assertEqual(status, 0)
-        self.assertEqual(
-            run.call_args_list[1].args[0],
-            [
-                "git",
-                "diff",
-                "--exit-code",
-                "--",
-                "requirements.txt",
-            ],
+        self.assertEqual(run.call_count, 1)
+        self.assertEqual(read_lock.call_count, 2)
+
+    def test_check_mode_fails_when_compile_changes_lockfile(self) -> None:
+        compile_run = mock.Mock(returncode=0)
+
+        with mock.patch(
+            "tools.run_dependency_lock.subprocess.run",
+            return_value=compile_run,
+        ):
+            with mock.patch(
+                "tools.run_dependency_lock.read_lockfile_bytes",
+                side_effect=[b"stale", b"fresh"],
+            ):
+                with mock.patch("builtins.print") as print_mock:
+                    status = run_dependency_lock.run_dependency_lock(
+                        python="python3",
+                        requirements_in="requirements.in",
+                        requirements_lock="requirements.txt",
+                        ensure_bootstrap=False,
+                        pip_tools_version=None,
+                        check_lockfile=True,
+                    )
+
+        self.assertEqual(status, 1)
+        print_mock.assert_any_call(
+            "dependency-lock: requirements.txt changed after compile; "
+            "run make deps-lock and commit the generated lockfile"
         )
+
+    def test_check_mode_treats_created_lockfile_as_changed(self) -> None:
+        compile_run = mock.Mock(returncode=0)
+
+        with mock.patch(
+            "tools.run_dependency_lock.subprocess.run",
+            return_value=compile_run,
+        ):
+            with mock.patch(
+                "tools.run_dependency_lock.read_lockfile_bytes",
+                side_effect=[None, b"fresh"],
+            ):
+                with mock.patch("builtins.print"):
+                    status = run_dependency_lock.run_dependency_lock(
+                        python="python3",
+                        requirements_in="requirements.in",
+                        requirements_lock="requirements.txt",
+                        ensure_bootstrap=False,
+                        pip_tools_version=None,
+                        check_lockfile=True,
+                    )
+
+        self.assertEqual(status, 1)
 
     def test_compile_failure_skips_lockfile_diff(self) -> None:
         compile_run = subprocess.CompletedProcess(
@@ -197,21 +242,24 @@ class RunDependencyLockTests(unittest.TestCase):
 
     def test_check_mode_prints_concise_clean_status(self) -> None:
         compile_run = mock.Mock(returncode=0)
-        diff_run = mock.Mock(returncode=0)
 
         with mock.patch(
             "tools.run_dependency_lock.subprocess.run",
-            side_effect=[compile_run, diff_run],
+            return_value=compile_run,
         ):
-            with mock.patch("builtins.print") as print_mock:
-                status = run_dependency_lock.run_dependency_lock(
-                    python="python3",
-                    requirements_in="requirements.in",
-                    requirements_lock="requirements.txt",
-                    ensure_bootstrap=False,
-                    pip_tools_version=None,
-                    check_lockfile=True,
-                )
+            with mock.patch(
+                "tools.run_dependency_lock.read_lockfile_bytes",
+                side_effect=[b"locked", b"locked"],
+            ):
+                with mock.patch("builtins.print") as print_mock:
+                    status = run_dependency_lock.run_dependency_lock(
+                        python="python3",
+                        requirements_in="requirements.in",
+                        requirements_lock="requirements.txt",
+                        ensure_bootstrap=False,
+                        pip_tools_version=None,
+                        check_lockfile=True,
+                    )
 
         self.assertEqual(status, 0)
         print_mock.assert_any_call(

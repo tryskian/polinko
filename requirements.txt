@@ -45,8 +45,10 @@ click==8.3.3
     # via
     #   pip-tools
     #   uvicorn
-cryptography==49.0.0
-    # via pyjwt
+cryptography==50.0.1
+    # via
+    #   -r requirements.in
+    #   pyjwt
 cyclonedx-python-lib==11.11.0
     # via pip-audit
 defusedxml==0.7.1
@@ -176,7 +178,7 @@ pyjwt==2.13.0
     # via mcp
 pyparsing==3.3.2
     # via pip-requirements-parser
-pypdf==6.14.2
+pypdf==6.16.2
     # via -r requirements.in
 pyproject-hooks==1.2.0
     # via
@@ -270,7 +272,7 @@ yamllint==1.38.0
     # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==26.1.2
+pip==26.2.1
     # via
     #   pip-api
     #   pip-tools
