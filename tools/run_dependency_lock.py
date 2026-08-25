@@ -120,9 +120,7 @@ def run_dependency_lock(
         return compile_status
 
     if check_lockfile:
-        return verify_lockfile_unchanged(
-            requirements_lock, lockfile_before_compile
-        )
+        return verify_lockfile_unchanged(requirements_lock, lockfile_before_compile)
 
     return 0
 
