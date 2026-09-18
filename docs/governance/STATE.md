@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-07-21
+Last updated: 2026-09-18
 
 ## Current Truth
 
@@ -169,23 +169,17 @@ Last updated: 2026-07-21
   - local eval gates validate smoke and gate port overrides inside the suite
     that uses them, so unrelated suite config drift does not block startup
     smoke checks
-  - core background runner lifecycle is script-owned for `caffeinate`,
-    `server-daemon`, and `eval-sidecar`; Make targets
-    delegate start, status, and stop actions to helper scripts with repo-owned
-    PID/log handling, and direct runner invocation uses the shared
-    `tools/python_runtime.sh` interpreter rail for detached launchers
+  - core background runner lifecycle is script-owned for `server-daemon` and
+    `eval-sidecar`; Make targets delegate start, status, and stop actions to
+    helper scripts with repo-owned PID/log handling, and direct runner invocation
+    uses the shared `tools/python_runtime.sh` interpreter rail for detached
+    launchers
   - runner-specific `*_LAUNCHER_PYTHON` overrides are validated before manager
     exec or detached launch, so bad launcher interpreters fail before PID state
     is written
-  - `caffeinate` command and match-pattern config are paired in Make so status
-    and closeout cleanup inspect the same wake-lock shape that start launches
-  - repo-managed caffeinate rejects invalid command, regex, active-window, and
-    global-cleanup config before it reads, reports, launches, stops, or cleans
-    PID/activity state, rejects invalid runtime output paths with direct
-    diagnostics, and requires process-inspection tooling before PID ownership
-    classification or cleanup
-  - `caffeinate` treats stopped/zombie managed PIDs as stale and only removes
-    owned runtime metadata after bounded terminate/escalate cleanup succeeds
+  - Mac-wide keep-awake control is external to the repo: the Coffee Codex
+    plugin owns the one shared session, and repo lifecycle targets leave it
+    unchanged
   - shell lifecycle runners require `ps` before making PID-state decisions, so
     missing local process-inspection tooling fails with a direct prerequisite
     diagnostic
@@ -376,7 +370,7 @@ Last updated: 2026-07-21
   - runtime Make targets keep the public entrypoint at
     `makefiles/runtime.mk`, while role-owned fragments live under
     `makefiles/runtime/` for core lifecycle, server-daemon, local URL helpers,
-    OpenAI account helpers, keep-awake, and privacy guard surfaces
+    OpenAI account helpers, and privacy guard surfaces
   - runtime local URL targets keep the public entrypoint at
     `makefiles/runtime/local-urls.mk`, while operator-surface fragments live
     under `makefiles/runtime/local-urls/` for API docs URLs and PASS/FAIL viz
@@ -388,17 +382,12 @@ Last updated: 2026-07-21
   - runtime Make configuration keeps the public entrypoint at
     `makefiles/config/runtime.mk`, while role-owned fragments live under
     `makefiles/config/runtime/` for core app URLs, local URL launching,
-    OpenAI account summaries, keep-awake state, and server-daemon defaults
+    OpenAI account summaries, and server-daemon defaults
   - OpenAI account summary config keeps the public entrypoint at
     `makefiles/config/runtime/openai-account.mk`, while account-query fragments
     live under `makefiles/config/runtime/openai-account/` for base API/auth
     defaults, cost defaults, usage defaults, project/limits defaults, and env
     assembly
-  - repo-managed caffeinate config keeps the public entrypoint at
-    `makefiles/config/runtime/caffeinate.mk`, while runtime-role fragments
-    live under `makefiles/config/runtime/caffeinate/` for state files,
-    repo/activity settings, wake-lock command matching, runner defaults, and
-    env/activity macro assembly
   - check Make targets keep the public entrypoint at `makefiles/checks.mk`,
     while role-owned fragments live under `makefiles/checks/` for tests,
     Python static analysis, docs/rendering, runtime audits, and local
@@ -864,8 +853,7 @@ Last updated: 2026-07-21
     repo-local checks, including `make pycheck`
   - simple required Make-variable validation for developer test helpers lives
     in `tools.validate_make_variable`; `test-one`, `test-targeted`, and
-    `pycheck` record repo activity only after required input validation
-    succeeds
+    `pycheck` validate required input before execution
   - external command prerequisite checks for `act`, Docker, k6, and Trivy
     helper targets live in `tools.require_command`, preserving direct
     operator diagnostics while keeping Make targets declarative
@@ -934,40 +922,13 @@ Last updated: 2026-07-21
     ResourceWarning noise stays out of `make test`
 - Runtime lifecycle controls are repo-managed:
   - `make end` is the session closeout target
-  - `make caffeinate` launches the managed wake-lock process in a detached
-    child session through the configured Python launcher
-  - `make caffeinate-status`, `make decaffeinate`, and `make end` operate on
-    the repo-owned PID without adopting unrelated user wake-lock processes
-  - repo-managed caffeinate stores PID, log, ownership metadata, and activity
-    metadata under a repo-scoped runtime namespace by default
-  - repo-managed caffeinate writes metadata for PID ownership and repo activity
-    state so status can distinguish `ACTIVE`, `QUIET`, `STALE`, and `OFF`
-  - `make caffeinate` reports only the start/already-running action; detailed
-    PID, repo-activity, and wake-assertion output belongs to
-    `make caffeinate-status`
-  - repo-managed caffeinate migrates owned flat runtime files on
-    mutating lifecycle actions and cleans orphaned flat PID metadata before
-    launch or stop decisions
-  - repo-managed caffeinate validates command, regex, repo-slug, activity-label,
-    activity-target, active-window, and global-cleanup config before
-    PID/activity state work, rejects invalid runtime output paths with direct
-    diagnostics, and requires process-inspection tooling before PID ownership
-    classification or cleanup
-  - repo-managed caffeinate treats stopped/zombie managed PIDs as stale and
-    bounds terminate/escalate cleanup before removing owned runtime metadata
-  - high-traffic lifecycle, validation, and runtime operator work Make targets
-    update repo activity metadata without changing wake-lock ownership
-  - current background-runner start/stop targets that own local process state
-    update repo activity before lifecycle work begins
-  - pure status/read-only targets report state while preserving activity
-    freshness
-  - `make caffeinate-off-all` is repo-scoped by default; global matching-process
-    cleanup requires explicit operator opt-in
-  - `make end-stop` closes the core background runner family:
-    `eval-sidecar`, `server-daemon`, and repo-managed `caffeinate`, then
-    prints status for each family member; `make session-status` delegates to
-    `tools/session_status.sh`, reports every family, and returns failure when
-    a child status surface reports runner drift
+  - `make end-stop` closes the repo-owned background runner family:
+    `eval-sidecar` and `server-daemon`, then prints status for both;
+    `make session-status` delegates to `tools/session_status.sh` and returns
+    failure when either child status surface reports runner drift
+  - Mac-wide keep-awake state is owned outside the repository by the Coffee
+    Codex plugin; `make start`, `make end-stop`, and `make end` do not inspect,
+    start, adopt, or stop it
   - background runner scripts launch detached child processes through
     `tools/launch_detached_process.py` after resolving the checkout root
     through `tools/repo_root.sh`, while each runner keeps its own liveness,
@@ -990,8 +951,8 @@ Last updated: 2026-07-21
   - `make doctor-env` reports both the active interpreter path and its source
     label, so repo `.venv`, override, and host fallback paths are visible
     during startup
-  - `make venv` records repo activity and delegates interactive shell activation
-    to `tools/open_venv_shell.sh`
+  - `make venv` delegates interactive shell activation to
+    `tools/open_venv_shell.sh`
   - local URL helpers `make docs` and `make viz` print the target URL by
     default instead of launching a browser
   - explicit browser launch remains available through `make docs-open` and
@@ -1024,9 +985,8 @@ Last updated: 2026-07-21
     maintenance searches focused on implementation, runtime/research docs,
     tests, and operator scripts without flooding the operator with transcript,
     archive, generated-output, or long governance-log lanes
-  - repo-search query validation lives in `tools.repo_search`; Make preserves
-    the activity contract by recording repo activity only after query
-    validation succeeds
+  - repo-search query validation lives in `tools.repo_search`; Make runs the
+    search only after query validation succeeds
   - `make repo-search-full` is the explicit source/evidence search helper for
     cases where private transcripts, frozen eval snapshots, or long governance
     history are the active source

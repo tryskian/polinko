@@ -40,6 +40,18 @@ Use this doc for operator procedure.
 3. Procedure lives in this runbook.
 4. Mechanical checks live in `make` targets.
 
+## Shared Power Control
+
+1. The external Coffee Codex plugin owns the one shared Mac-wide keep-awake
+   session.
+2. Use `coffee` for status, `coffee start` to begin a session, and `coffee stop`
+   to release it.
+3. Treat those as explicit operator actions independent of repo startup and
+   closeout.
+4. `make start`, `make end-stop`, and `make end` do not inspect, start, adopt,
+   or stop Coffee.
+5. Polinko owns no keep-awake PID file, process state, or wrapper target.
+
 ## Morning Startup Ritual
 
 1. Run:
@@ -209,14 +221,6 @@ Use this doc for operator procedure.
 
 - `make doctor-env`
   - environment health check
-- `make caffeinate`
-  - validate repo-managed wake-lock config and start the wake lock
-- `make caffeinate-status`
-  - validate repo-managed wake-lock config and report wake-lock/activity status
-- `make decaffeinate`
-  - validate repo-managed wake-lock config and stop the wake lock
-- `make decaffeinate-status`
-  - report closeout wake-lock status
 - `make api-smoke`
   - live backend smoke check with isolated default localhost port and DB paths
 - `make cache-clean-preview`
@@ -530,15 +534,6 @@ Use this doc for operator procedure.
   - supports literal Markdown code spans through quoted heredoc output
   - keeps runtime shell wrappers on shared command helper surfaces, including
     `tools/make_runtime.sh` and `tools/shell_command_common.sh`
-- repo activity heartbeat
-  - common lifecycle, validation, and runtime operator work Make targets mark
-    repo activity before running their work
-  - current background-runner start/stop targets that own local process state
-    mark repo activity before lifecycle work begins
-  - activity marking updates caffeinate activity metadata only; wake-lock PID
-    ownership stays unchanged
-  - pure status/read-only targets report state while preserving activity
-    freshness
 - `make local-runtime-config-check`
   - validates VS Code task/config shape, extension recommendation drift, and
     devcontainer config/setup-script drift through

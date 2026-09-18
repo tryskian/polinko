@@ -6985,3 +6985,24 @@ or branch history instead.
   Updating `dompurify` to `3.4.12` and `markdown-it` to `14.3.0` moves the
   resolved `linkify-it` dependency to `5.0.2` while preserving the existing
   root tooling workflow.
+
+## D-414: Keep Mac-wide power control outside the repository lifecycle
+
+- Date: `2026-09-18`
+- Category: `operator_workflow`
+- Tags: `coffee_plugin`, `keep_awake`, `repo_lifecycle`, `shared_control`
+- Human-led: The human lead established one shared Mac-wide Coffee session for
+  Polinko and the toys, managed independently from every repository.
+- Engineer implementation: Remove Polinko's caffeinate manager, config
+  fragments, Make targets, startup calls, session-status reporting, closeout
+  cleanup, and manager tests. Keep server-daemon and eval-sidecar ownership
+  inside Polinko, and retain the existing recipe activity hook as a
+  side-effect-free compatibility surface.
+- Decision: The external Coffee Codex plugin exclusively owns Mac-wide
+  keep-awake state. `make start`, `make end-stop`, and `make end` own only
+  Polinko runtime and repository lifecycle work and leave Coffee unchanged.
+  This supersedes earlier repo-managed caffeinate decisions wherever they
+  conflict with this boundary.
+- Why: A Mac-wide process is shared across repositories and tasks. Repository
+  PID files and automatic start or stop hooks create conflicting ownership and
+  allow one closeout to interfere with unrelated work.

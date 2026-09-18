@@ -5,3 +5,7 @@ CLI_ENTRYPOINT ?= -m polinko.cli
 ASGI_APP ?= server:app
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
 DEV_VIZ_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/viz/pass-fail
+
+# Compatibility hook for existing recipes. It deliberately owns no process or
+# runtime state; Mac-wide keep-awake control lives outside this repository.
+repo_activity = :
