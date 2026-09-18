@@ -794,8 +794,9 @@ Last updated: 2026-09-18
     pip-tools backtracking resolver
   - Python security tooling and pins are tracked through `requirements.in` plus
     generated `requirements.txt`; current refreshed pins include
-    `httpx2==2.12.0`, `httpcore2==2.12.0`, `pip-audit==2.10.1`,
-    `PyJWT==2.13.0`, `pip==26.2.1`, and `pypdf==6.16.2`
+    `anyio==4.14.2`, `httpx2==2.12.0`, `httpcore2==2.12.0`,
+    `pip-audit==2.10.1`, `PyJWT==2.13.0`, `pip==26.2.1`, and
+    `pypdf==6.16.2`
   - PR `#1049` updated active security pins to `mcp==1.28.1` and
     `click==8.3.3`; GitHub Actions security checks passed before merge, while
     Dependabot alert closure may lag until GitHub refreshes the dependency
