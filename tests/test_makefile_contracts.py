@@ -22,9 +22,6 @@ MAKE_CONFIG_RUNTIME = REPO_ROOT / "makefiles" / "config" / "runtime.mk"
 MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT = (
     REPO_ROOT / "makefiles" / "config" / "runtime" / "openai-account.mk"
 )
-MAKE_CONFIG_RUNTIME_CAFFEINATE = (
-    REPO_ROOT / "makefiles" / "config" / "runtime" / "caffeinate.mk"
-)
 MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
 MAKE_CONFIG_EVALS_GATES = REPO_ROOT / "makefiles" / "config" / "evals" / "gates.mk"
 MAKE_CONFIG_EVALS_GATES_RUNNER = (
@@ -155,7 +152,6 @@ MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
 MAKE_RUNTIME_CORE = REPO_ROOT / "makefiles" / "runtime" / "core.mk"
 MAKE_RUNTIME_LOCAL_URLS = REPO_ROOT / "makefiles" / "runtime" / "local-urls.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
-CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
 OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
 SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
 LOCAL_URL_LAUNCHER_SCRIPT = REPO_ROOT / "tools" / "open_local_url.sh"
@@ -727,7 +723,7 @@ class MakefileContractTests(unittest.TestCase):
             "include makefiles/runtime/openai-account.mk",
             runtime_entry_text,
         )
-        self.assertIn("include makefiles/runtime/caffeinate.mk", runtime_entry_text)
+        self.assertNotIn("caffeinate", runtime_entry_text)
         self.assertIn("include makefiles/runtime/privacy.mk", runtime_entry_text)
         self.assertIn(
             "include makefiles/runtime/core/interactive.mk",
@@ -761,7 +757,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("server-daemon:", contract_text)
         self.assertIn("docs: server-daemon", contract_text)
         self.assertIn("openai-account-summary:", contract_text)
-        self.assertIn("caffeinate:", contract_text)
+        self.assertNotRegex(contract_text, r"(?m)^caffeinate:")
         self.assertIn("privacy-local-on:", contract_text)
 
     def test_eval_config_is_extracted_through_role_includes(self) -> None:
@@ -1531,9 +1527,6 @@ class MakefileContractTests(unittest.TestCase):
         runtime_openai_account_entry_text = (
             MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT.read_text(encoding="utf-8")
         )
-        runtime_caffeinate_entry_text = MAKE_CONFIG_RUNTIME_CAFFEINATE.read_text(
-            encoding="utf-8"
-        )
         reports_runner_entry_text = MAKE_CONFIG_EVALS_REPORTS_RUNNER.read_text(
             encoding="utf-8"
         )
@@ -1584,10 +1577,7 @@ class MakefileContractTests(unittest.TestCase):
             "include makefiles/config/runtime/openai-account.mk",
             runtime_config_entry_text,
         )
-        self.assertIn(
-            "include makefiles/config/runtime/caffeinate.mk",
-            runtime_config_entry_text,
-        )
+        self.assertNotIn("caffeinate", runtime_config_entry_text)
         self.assertIn(
             "include makefiles/config/runtime/server.mk", runtime_config_entry_text
         )
@@ -1617,32 +1607,6 @@ class MakefileContractTests(unittest.TestCase):
             "include makefiles/config/runtime/openai-account/env.mk",
             runtime_openai_account_entry_text,
         )
-        self.assertIsNone(
-            re.search(
-                r"(?m)^[A-Za-z_][A-Za-z0-9_]*\s*(?:\?=|:=|=|\+=)",
-                runtime_caffeinate_entry_text,
-            )
-        )
-        self.assertIn(
-            "include makefiles/config/runtime/caffeinate/state.mk",
-            runtime_caffeinate_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/config/runtime/caffeinate/repo.mk",
-            runtime_caffeinate_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/config/runtime/caffeinate/command.mk",
-            runtime_caffeinate_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/config/runtime/caffeinate/runner.mk",
-            runtime_caffeinate_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/config/runtime/caffeinate/env.mk",
-            runtime_caffeinate_entry_text,
-        )
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn(
             'PYTHON ?= $(shell VENV="$(VENV)" . ./tools/python_runtime.sh; '
@@ -1660,9 +1624,7 @@ class MakefileContractTests(unittest.TestCase):
             "OPENAI_ACCOUNT_SCRIPT ?= ./tools/openai_account_summary.py", config_text
         )
         self.assertIn("OPENAI_ACCOUNT_ENV =", config_text)
-        self.assertIn("CAFFEINATE_SCRIPT ?= ./tools/manage_caffeinate.sh", config_text)
-        self.assertIn("CAFFEINATE_LAUNCHER_PYTHON ?= $(PYTHON)", config_text)
-        self.assertIn("CAFFEINATE_ENV =", config_text)
+        self.assertIn("repo_activity = :", config_text)
         self.assertIn(
             "SERVER_DAEMON_SCRIPT ?= ./tools/run_server_daemon.sh", config_text
         )
@@ -1888,7 +1850,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("package-install-check", targets)
         self.assertIn("chat", targets)
         self.assertIn("server-daemon", targets)
-        self.assertIn("caffeinate", targets)
+        self.assertNotIn("caffeinate", targets)
         self.assertIn("openai-account-summary", targets)
         self.assertIn("openai-costs", targets)
         self.assertIn("openai-usage", targets)
@@ -1956,10 +1918,7 @@ class MakefileContractTests(unittest.TestCase):
             "/tmp/polinko-python -m py_compile tools/check_shell_scripts.py",
             result.stdout,
         )
-        self.assertIn(
-            'CAFFEINATE_ACTIVITY_LABEL="make pycheck"',
-            result.stdout,
-        )
+        self.assertIn("py_compile tools/check_shell_scripts.py", result.stdout)
         self.assertNotIn("python3 -m py_compile", result.stdout)
 
     def test_simple_make_argument_validation_delegates_to_helper(self) -> None:
@@ -2308,7 +2267,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(
             text,
             r"(?m)^end-stop:\s*eval-sidecar-stop server-daemon-stop "
-            r"caffeinate-off-all session-status$",
+            r"session-status$",
         )
         self.assertIn("session-status", _phony_targets())
         self.assertRegex(text, r"(?m)^session-status:$")
@@ -2329,20 +2288,21 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("STATUS_STEP_LABELS=(", status_script)
         self.assertIn('"Server"', status_script)
         self.assertIn('"Eval sidecar"', status_script)
-        self.assertIn('"Keep-awake"', status_script)
         self.assertIn('"server-daemon-status"', status_script)
         self.assertIn('"eval-sidecar-status"', status_script)
-        self.assertIn('"caffeinate-status"', status_script)
         self.assertIn("status=0", status_script)
         self.assertIn("step_status=$?", status_script)
         self.assertIn('exit "$status"', status_script)
         self.assertNotIn("server-daemon-status || true", text)
         self.assertNotIn("eval-sidecar-status || true", text)
-        self.assertNotIn("caffeinate-status || true", text)
-        self.assertRegex(text, r"(?m)^caffeinate-on:\s*caffeinate$")
-        self.assertRegex(text, r"(?m)^caffeinate-off:\s*decaffeinate$")
-        self.assertRegex(text, r"(?m)^caffeinate-off-all:$")
-        self.assertRegex(text, r"(?m)^decaffeinate-status:\s*caffeinate-status$")
+        for target in (
+            "caffeinate",
+            "caffeinate-status",
+            "caffeinate-off-all",
+            "decaffeinate",
+            "decaffeinate-status",
+        ):
+            self.assertNotRegex(text, rf"(?m)^{target}:")
 
     def test_local_privacy_guard_does_not_hide_tracked_docs_on_apply(self) -> None:
         text = LOCAL_PRIVACY_GUARD_SCRIPT.read_text(encoding="utf-8")
@@ -2851,36 +2811,21 @@ class MakefileContractTests(unittest.TestCase):
     def test_runtime_helper_scripts_are_named_for_their_roles(self) -> None:
         text = _makefile_contract_text()
 
-        self.assertTrue(CAFFEINATE_SCRIPT.is_file())
         self.assertTrue(OPENAI_ACCOUNT_SCRIPT.is_file())
         self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(PROCESS_LIFECYCLE_COMMON_SCRIPT.is_file())
         self.assertTrue(DETACHED_PROCESS_LAUNCHER_SCRIPT.is_file())
         self.assertTrue(END_GIT_CHECK_SCRIPT.is_file())
-        self.assertTrue(os.access(CAFFEINATE_SCRIPT, os.X_OK))
         self.assertTrue(os.access(SERVER_DAEMON_SCRIPT, os.X_OK))
         detached_launcher_text = DETACHED_PROCESS_LAUNCHER_SCRIPT.read_text(
             encoding="utf-8"
         )
         self.assertIn("start_new_session=True", detached_launcher_text)
         self.assertIn("pid_file.write_text", detached_launcher_text)
-        caffeinate_script_text = CAFFEINATE_SCRIPT.read_text(encoding="utf-8")
-        self.assertIn("launch_detached_process.py", caffeinate_script_text)
-        self.assertIn('source "$script_dir/repo_root.sh"', caffeinate_script_text)
-        self.assertIn("polinko_cd_repo_root", caffeinate_script_text)
-        self.assertIn(
-            'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
-            caffeinate_script_text,
-        )
-        self.assertNotIn("nohup $caffeinate_cmd", caffeinate_script_text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" summary', text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" costs', text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" usage', text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" limits', text)
-        self.assertIn('bash "$(CAFFEINATE_SCRIPT)" start', text)
-        self.assertIn('bash "$(CAFFEINATE_SCRIPT)" stop', text)
-        self.assertIn('bash "$(CAFFEINATE_SCRIPT)" stop-all', text)
-        self.assertIn('bash "$(CAFFEINATE_SCRIPT)" status', text)
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" start', text)
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" stop', text)
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" status', text)
@@ -2921,42 +2866,7 @@ class MakefileContractTests(unittest.TestCase):
             server_daemon_script_text,
         )
         self.assertNotIn("nohup", server_daemon_script_text)
-        self.assertIn(
-            "CAFFEINATE_MATCH_PATTERN ?= ^/usr/bin/caffeinate -d -i -m( |$$)",
-            text,
-        )
-        self.assertIn(
-            'CAFFEINATE_MATCH_PATTERN="$(CAFFEINATE_MATCH_PATTERN)"',
-            text,
-        )
-        self.assertIn("CAFFEINATE_RUNTIME_ROOT ?= /tmp/polinko-runtime", text)
-        self.assertIn(
-            "CAFFEINATE_STATE_DIR ?= $(CAFFEINATE_RUNTIME_ROOT)/$(CAFFEINATE_REPO_SLUG)",
-            text,
-        )
-        self.assertIn(
-            "CAFFEINATE_PID_FILE ?= $(CAFFEINATE_STATE_DIR)/caffeinate.pid",
-            text,
-        )
-        self.assertIn(
-            "CAFFEINATE_LOG ?= $(CAFFEINATE_STATE_DIR)/caffeinate.log",
-            text,
-        )
-        self.assertIn(
-            "CAFFEINATE_META_FILE ?= $(CAFFEINATE_STATE_DIR)/caffeinate.meta.json",
-            text,
-        )
-        self.assertIn(
-            "CAFFEINATE_ACTIVITY_FILE ?= $(CAFFEINATE_STATE_DIR)/activity.meta.json",
-            text,
-        )
-        self.assertIn("CAFFEINATE_REPO_SLUG ?= $(notdir $(CURDIR))", text)
-        self.assertIn("CAFFEINATE_ACTIVE_WINDOW_SECONDS ?= 1800", text)
-        self.assertIn("CAFFEINATE_ALLOW_GLOBAL_CLEANUP ?= 0", text)
-        self.assertIn("repo_activity = $(CAFFEINATE_ENV)", text)
-        self.assertIn('bash "$(CAFFEINATE_SCRIPT)" activity', text)
-        self.assertIn('CAFFEINATE_ACTIVITY_LABEL="$(1)"', text)
-        self.assertIn('CAFFEINATE_ACTIVITY_TARGET="$(2)"', text)
+        self.assertIn("repo_activity = :", text)
         self.assertIn("SERVER_REPO_SLUG ?= $(notdir $(CURDIR))", text)
         self.assertIn("SERVER_RUNTIME_ROOT ?= /tmp/polinko-runtime", text)
         self.assertIn(
@@ -3061,26 +2971,8 @@ class MakefileContractTests(unittest.TestCase):
             "@$(call repo_activity,make playwright-snapshot-dir,playwright-snapshot-dir)",
             text,
         )
-        self.assertIn('CAFFEINATE_META_FILE="$(CAFFEINATE_META_FILE)"', text)
-        self.assertIn(
-            'CAFFEINATE_ACTIVITY_FILE="$(CAFFEINATE_ACTIVITY_FILE)"',
-            text,
-        )
-        self.assertIn('CAFFEINATE_RUNTIME_ROOT="$(CAFFEINATE_RUNTIME_ROOT)"', text)
-        self.assertIn('CAFFEINATE_STATE_DIR="$(CAFFEINATE_STATE_DIR)"', text)
-        self.assertIn('CAFFEINATE_REPO_SLUG="$(CAFFEINATE_REPO_SLUG)"', text)
-        self.assertIn(
-            'CAFFEINATE_ACTIVE_WINDOW_SECONDS="$(CAFFEINATE_ACTIVE_WINDOW_SECONDS)"',
-            text,
-        )
-        self.assertIn(
-            'CAFFEINATE_ALLOW_GLOBAL_CLEANUP="$(CAFFEINATE_ALLOW_GLOBAL_CLEANUP)"',
-            text,
-        )
-        self.assertIn("CAFFEINATE_MATCH_PATTERN", caffeinate_script_text)
-        self.assertNotIn("nohup $(CAFFEINATE_CMD)", text)
-        self.assertNotIn('pgrep -f "^/usr/bin/caffeinate -d -i -m', text)
-        self.assertNotIn("/usr/bin/pmset -g assertions", text)
+        self.assertNotIn("CAFFEINATE_", text)
+        self.assertNotIn("manage_caffeinate", text)
         end_git_check_text = END_GIT_CHECK_SCRIPT.read_text(encoding="utf-8")
         self.assertIn('source "$script_dir/repo_root.sh"', end_git_check_text)
         self.assertIn("polinko_cd_repo_root", end_git_check_text)
@@ -3396,10 +3288,7 @@ class MakefileContractTests(unittest.TestCase):
             "openai-costs",
             "openai-usage",
             "openai-limits",
-            "caffeinate",
             "scripts-check",
-            "caffeinate-status",
-            "caffeinate-off-all",
             "end-stop",
             "backend-gate",
             "cgpt-export-index",

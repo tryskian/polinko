@@ -31,8 +31,6 @@ step labels and counts stay aligned as the routine changes.
    - `make doctor-env`
      - reports the active Python interpreter and whether it came from Make's
        repo `.venv` selection, an override, or host fallback
-   - `make caffeinate`
-   - `make caffeinate-status`
 4. Start the repo-managed local server:
    - `make server-daemon`
    - leaves the local API server running under repo-owned PID and log state
@@ -61,46 +59,13 @@ Source of truth:
 
 - [tools/start_of_day_routine.sh](../../tools/start_of_day_routine.sh)
 
-Wake-lock rule:
+Power-control boundary:
 
-- `make caffeinate` records only this repo's managed PID
-- `CAFFEINATE_CMD` and `CAFFEINATE_MATCH_PATTERN` are configured together so
-  start, status, and stop-all inspect the same wake-lock shape
-- caffeinate PID, log, ownership metadata, and activity metadata default to a
-  repo-scoped runtime namespace under `CAFFEINATE_STATE_DIR`
-- `make caffeinate` and companion wake-lock targets reject invalid command,
-  match-pattern regex, repo-slug, activity-label, activity-target,
-  active-window, and global-cleanup config before they read, report, launch,
-  stop, or clean PID/activity state
-- caffeinate start, stop, and activity actions reject invalid runtime output
-  paths with direct diagnostics before launch, cleanup, or metadata writes
-- caffeinate start, status, stop, and stop-all require process-inspection
-  tooling before PID ownership classification or cleanup
-- `make caffeinate` writes repo-scoped metadata for the managed wake-lock PID
-  and the latest repo activity heartbeat
-- `make caffeinate` reports only the start/already-running action; detailed
-  PID, repo-activity, and wake-assertion output belongs to
-  `make caffeinate-status`
-- mutating caffeinate lifecycle actions migrate owned flat runtime files before
-  launch or stop decisions and clean orphaned flat PID metadata
-- high-traffic lifecycle, validation, and runtime operator work targets mark
-  repo activity through the same activity metadata without starting, stopping,
-  or adopting a wake-lock PID
-- current background-runner start/stop targets that own local process state
-  mark repo activity before lifecycle work begins
-- pure status/read-only targets report state while preserving activity
-  freshness
-- the managed process is launched in a detached child session so it survives
-  non-interactive host shell command exit
-- `make decaffeinate` stops the repo-owned PID with bounded
-  terminate/escalate cleanup before owned runtime metadata is removed
-- `make caffeinate-status` is read-only; it reports `ACTIVE`, `QUIET`,
-  `STALE`, or `OFF` from PID ownership, metadata, and activity freshness, and
-  reports matching unmanaged `caffeinate` processes without adopting their PIDs;
-  stopped/zombie managed PIDs are treated as stale
-- `make caffeinate-off-all` is repo-scoped by default: it cleans the managed
-  PID and current repo runtime metadata, while global matching-process cleanup
-  requires explicit operator opt-in
+- the repo lifecycle does not start, inspect, adopt, or stop Mac-wide
+  keep-awake state
+- the external Coffee Codex plugin owns the one shared Mac-wide session
+- use `coffee`, `coffee start`, and `coffee stop` as separate explicit actions
+- `make start`, `make end-stop`, and `make end` leave Coffee unchanged
 
 Runner lifecycle rule:
 
@@ -173,12 +138,12 @@ Runner lifecycle rule:
 - runner-specific `*_LAUNCHER_PYTHON` overrides are validated before manager
   exec or detached launch, so bad launcher interpreters fail before PID state is
   written
-- `make session-status` is the consolidated status surface for the runner
-  family. It delegates to `tools/session_status.sh`, which owns the runner
-  labels and explicit status dispatch. The helper reports every runner family
-  and returns a non-zero status if any child status surface reports runner
-  drift. `make end-stop` runs it after stop cleanup so closeout reports the
-  post-stop state without hiding individual runner drift.
+- `make session-status` is the consolidated status surface for the repo-owned
+  server and eval-sidecar runners. It delegates to `tools/session_status.sh`,
+  which owns the runner labels and explicit status dispatch. The helper returns
+  a non-zero status if either child status surface reports runner drift. `make
+  end-stop` runs it after stop cleanup so closeout reports the post-stop state
+  without hiding individual runner drift.
 
 Active kernel validation:
 

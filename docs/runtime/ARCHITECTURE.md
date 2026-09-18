@@ -85,14 +85,10 @@ This page is the structural map of the tracked system.
     virtualenv derivation, module execution, and target wiring
 - `makefiles/config/runtime/`
   - runtime configuration fragments for core app URLs, local URL launching,
-    OpenAI account summaries, keep-awake state, and server-daemon defaults
+    OpenAI account summaries and server-daemon defaults
 - `makefiles/config/runtime/openai-account/`
   - OpenAI account config fragments for base API/auth defaults, cost defaults,
     usage defaults, project/limits defaults, and env assembly
-- `makefiles/config/runtime/caffeinate/`
-  - repo-managed caffeinate config fragments for state files, repo/activity
-    settings, wake-lock command matching, runner defaults, and env/activity
-    macro assembly
 - `makefiles/config/surfaces/`
   - role-owned configuration fragments for notebooks, manual eval workbench,
     and local browser helpers
@@ -218,7 +214,7 @@ This page is the structural map of the tracked system.
     Docker lifecycle commands
 - `makefiles/runtime/`
   - runtime target fragments for core lifecycle, server-daemon, local URL,
-    OpenAI account, keep-awake, and privacy guard targets
+    OpenAI account, and privacy guard targets
 - `makefiles/runtime/local-urls/`
   - runtime local URL target fragments for API docs URLs and PASS/FAIL viz
     URLs

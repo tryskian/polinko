@@ -86,6 +86,11 @@ class TranscriptCloseoutTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write(root, "docs/peanut/transcripts/README.md", "# README\n")
+            _write(
+                root,
+                "docs/peanut/transcripts/ARCHIVE_METHOD.md",
+                "# Archive Method\n",
+            )
             _write(root, "docs/peanut/transcripts/sessions/export.md", "# Export\n")
 
             result = _run(VALIDATE_SCRIPT, root)
@@ -103,6 +108,43 @@ class TranscriptCloseoutTests(unittest.TestCase):
                 root,
                 "docs/peanut/transcripts/co_reasoning/example.md",
                 _base_transcript(VALID_INSIGHTS),
+            )
+
+            result = _run(VALIDATE_SCRIPT, root)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            "transcript-check: PASS (1 curated transcript files)", result.stdout
+        )
+
+    def test_validate_preserves_nested_fences_in_verbatim_block(self) -> None:
+        transcript = (
+            _base_transcript(
+                VALID_INSIGHTS,
+                identifier_lines=[
+                    "- `source_fidelity_markers`:",
+                    "  - `signal after nested fence`",
+                ],
+                transcript_lines=[
+                    "assistant: example follows",
+                    "```text",
+                    "nested example",
+                    "```",
+                    "user: signal after nested fence",
+                ],
+            )
+            .replace("```text\nassistant:", "````text\nassistant:")
+            .replace(
+                "user: signal after nested fence\n```\n",
+                "user: signal after nested fence\n````\n",
+            )
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write(
+                root,
+                "docs/peanut/transcripts/co_reasoning/example.md",
+                transcript,
             )
 
             result = _run(VALIDATE_SCRIPT, root)
@@ -212,6 +254,28 @@ The transcript has only one H3 section.
         self.assertEqual(fix_result.returncode, 0, fix_result.stderr)
         self.assertIn("transcript-fix: DONE (1 files updated)", fix_result.stdout)
         self.assertIn("### Key Points", updated)
+        self.assertEqual(validate_result.returncode, 0, validate_result.stderr)
+
+    def test_fix_normalises_legacy_verbatim_heading(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            transcript = _write(
+                root,
+                "docs/peanut/transcripts/co_reasoning/example.md",
+                _base_transcript(VALID_INSIGHTS).replace(
+                    "## Transcript (Verbatim Block)",
+                    "## Transcript (Verbatim Text With Diagram Links)",
+                ),
+            )
+
+            fix_result = _run(FIX_SCRIPT, root)
+            validate_result = _run(VALIDATE_SCRIPT, root)
+
+            updated = transcript.read_text(encoding="utf-8")
+
+        self.assertEqual(fix_result.returncode, 0, fix_result.stderr)
+        self.assertIn("transcript-fix: DONE (1 files updated)", fix_result.stdout)
+        self.assertIn("## Transcript (Verbatim Block)", updated)
         self.assertEqual(validate_result.returncode, 0, validate_result.stderr)
 
 

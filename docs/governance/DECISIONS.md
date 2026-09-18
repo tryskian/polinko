@@ -6985,3 +6985,46 @@ or branch history instead.
   Updating `dompurify` to `3.4.12` and `markdown-it` to `14.3.0` moves the
   resolved `linkify-it` dependency to `5.0.2` while preserving the existing
   root tooling workflow.
+
+## D-414: Keep Mac-wide power control outside the repository lifecycle
+
+- Date: `2026-09-18`
+- Category: `operator_workflow`
+- Tags: `coffee_plugin`, `keep_awake`, `repo_lifecycle`, `shared_control`
+- Human-led: The human lead established one shared Mac-wide Coffee session for
+  Polinko and the toys, managed independently from every repository.
+- Engineer implementation: Remove Polinko's caffeinate manager, config
+  fragments, Make targets, startup calls, session-status reporting, closeout
+  cleanup, and manager tests. Keep server-daemon and eval-sidecar ownership
+  inside Polinko, and retain the existing recipe activity hook as a
+  side-effect-free compatibility surface.
+- Decision: The external Coffee Codex plugin exclusively owns Mac-wide
+  keep-awake state. `make start`, `make end-stop`, and `make end` own only
+  Polinko runtime and repository lifecycle work and leave Coffee unchanged.
+  This supersedes earlier repo-managed caffeinate decisions wherever they
+  conflict with this boundary.
+- Why: A Mac-wide process is shared across repositories and tasks. Repository
+  PID files and automatic start or stop hooks create conflicting ownership and
+  allow one closeout to interfere with unrelated work.
+
+## D-415: Refresh vulnerable Python and Node dependency locks
+
+- Date: `2026-09-18`
+- Category: `dependency_management`
+- Tags: `pip_audit`, `npm_audit`, `lockfiles`, `overrides`, `security`
+- Human-led: The human lead approved dependency updates after closeout exposed
+  current vulnerabilities and reinforced that stale packages commonly carry
+  security risk.
+- Engineer implementation: Add the fixed `anyio==4.14.2` pin, update the
+  direct `httpx2` pin to `2.12.0`, regenerate the pip-tools lock with
+  `httpcore2==2.12.0`, add fixed root Node overrides for
+  `postcss-selector-parser==6.1.4` and `smol-toml==1.8.0`, and regenerate
+  `package-lock.json`.
+- Decision: Keep Python and Node audit gates strict. Resolve active advisories
+  with the smallest compatible direct-pin or transitive-override refresh, and
+  keep unrelated grouped dependency upgrades outside the security fix.
+- Why: The previous Python lock carried `anyio`, `httpx2`, and `httpcore2`
+  advisories, while the Node lock carried denial-of-service advisories through
+  `postcss-selector-parser` and `smol-toml`. The bounded refresh clears those
+  findings without importing the broad version and lint-policy drift in the
+  open grouped Dependabot updates.

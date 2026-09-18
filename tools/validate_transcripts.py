@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path("docs/peanut/transcripts")
 EXCLUDED_DIRS = {"sessions"}
-EXCLUDED_FILES = {"README.md"}
+EXCLUDED_FILES = {"ARCHIVE_METHOD.md", "README.md"}
 
 REQUIRED_MARKERS = [
     "# ",
@@ -73,16 +73,22 @@ def transcript_block(lines: list[str]) -> list[str]:
         return []
 
     fence_start = None
+    fence_char = ""
+    fence_length = 0
     for idx in range(transcript_heading + 1, len(lines)):
-        if lines[idx].startswith("```"):
+        stripped = lines[idx].strip()
+        if stripped.startswith("```") or stripped.startswith("~~~"):
             fence_start = idx
+            fence_char = stripped[0]
+            fence_length = len(stripped) - len(stripped.lstrip(fence_char))
             break
 
     if fence_start is None:
         return []
 
     for idx in range(fence_start + 1, len(lines)):
-        if lines[idx].startswith("```"):
+        stripped = lines[idx].strip()
+        if stripped and set(stripped) == {fence_char} and len(stripped) >= fence_length:
             return lines[fence_start + 1 : idx]
 
     return []

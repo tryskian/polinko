@@ -14,7 +14,6 @@ MAKE_BIN=$(polinko_require_make_command "session-status")
 STATUS_STEP_LABELS=(
 	"Server"
 	"Eval sidecar"
-	"Keep-awake"
 )
 
 run_make_status() {
@@ -32,9 +31,6 @@ run_status_step() {
 			;;
 		"Eval sidecar")
 			run_make_status "$label" "eval-sidecar-status"
-			;;
-		"Keep-awake")
-			run_make_status "$label" "caffeinate-status"
 			;;
 		*)
 			echo "session-status: unknown status step: $label" >&2

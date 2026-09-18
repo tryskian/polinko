@@ -66,12 +66,10 @@ class StartupContractTests(unittest.TestCase):
             "workspace context",
             "github-health",
             "doctor-env",
-            "caffeinate",
-            "caffeinate-status",
             "server-daemon",
             "api-smoke",
         ]
-        self.assertIn("START_TOTAL_STEPS=7", script)
+        self.assertIn("START_TOTAL_STEPS=5", script)
         self.assertIn("start_step()", script)
         self.assertEqual(
             len(expected_steps),
@@ -79,17 +77,13 @@ class StartupContractTests(unittest.TestCase):
         )
         positions = [script.index(f'start_step "{step}"') for step in expected_steps]
         self.assertEqual(sorted(positions), positions)
-        for hardcoded_step in range(1, 8):
-            self.assertNotIn(f'echo "[start] {hardcoded_step}/7', script)
+        for hardcoded_step in range(1, 6):
+            self.assertNotIn(f'echo "[start] {hardcoded_step}/5', script)
 
     def test_startup_starts_repo_managed_server_before_smoke(self) -> None:
         script = _read("tools/start_of_day_routine.sh")
 
         self.assertIn("make --no-print-directory server-daemon", script)
-        self.assertLess(
-            script.index("make --no-print-directory caffeinate-status"),
-            script.index("make --no-print-directory server-daemon"),
-        )
         self.assertLess(
             script.index("make --no-print-directory server-daemon"),
             script.index("make --no-print-directory api-smoke"),
@@ -156,18 +150,21 @@ class StartupContractTests(unittest.TestCase):
         self.assertIn("recommended next kernel", runbook)
         self.assertIn("Reserve `make end` for real session closeout", runbook)
 
-    def test_wake_lock_reference_matches_stop_all_contract(self) -> None:
+    def test_power_control_stays_outside_the_repo_lifecycle(self) -> None:
         start_reference = _read("docs/runtime/START_END_REFERENCE.md")
         runtime_makefile = _read_makefile_source("makefiles/runtime.mk")
-        caffeinate_script = _read("tools/manage_caffeinate.sh")
 
-        self.assertIn("caffeinate-off-all", runtime_makefile)
-        self.assertIn("stop-all", caffeinate_script)
-        self.assertIn("repo-scoped by default", start_reference)
-        self.assertIn("explicit operator opt-in", start_reference)
-        self.assertIn("`ACTIVE`, `QUIET`,", start_reference)
-        self.assertIn("without adopting their PIDs", start_reference)
-        self.assertNotIn("never adopted or stopped", start_reference)
+        for target in (
+            "caffeinate",
+            "caffeinate-status",
+            "caffeinate-off-all",
+            "decaffeinate",
+        ):
+            self.assertNotRegex(runtime_makefile, rf"(?m)^{target}:")
+        self.assertIn("external Coffee Codex plugin", start_reference)
+        self.assertIn("`coffee`", start_reference)
+        self.assertIn("`coffee start`", start_reference)
+        self.assertIn("`coffee stop`", start_reference)
 
 
 if __name__ == "__main__":

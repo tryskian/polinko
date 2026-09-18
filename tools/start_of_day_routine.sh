@@ -8,7 +8,7 @@ source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 ROOT_DIR="$POLINKO_REPO_ROOT"
 
-START_TOTAL_STEPS=7
+START_TOTAL_STEPS=5
 start_step_number=0
 
 start_step() {
@@ -29,12 +29,6 @@ fi
 
 start_step "doctor-env"
 make --no-print-directory doctor-env
-
-start_step "caffeinate"
-make --no-print-directory caffeinate
-
-start_step "caffeinate-status"
-make --no-print-directory caffeinate-status
 
 start_step "server-daemon"
 make --no-print-directory server-daemon

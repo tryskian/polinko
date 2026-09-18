@@ -2,7 +2,7 @@
 
 # Runtime Surface Map
 
-Last updated: 2026-07-03
+Last updated: 2026-09-18
 
 This map shows the local runtime and operator surfaces that need to stay
 maintainable during the current refactor. It separates manual startup,
@@ -18,7 +18,6 @@ flowchart TD
     StartRoutine --> RepoRoot["tools/repo_root.sh"]
     StartRoutine --> GitHubHealth["make github-health"]
     StartRoutine --> Doctor["make doctor-env"]
-    StartRoutine --> WakeLock["make caffeinate + caffeinate-status"]
     StartRoutine --> ServerDaemonStart["make server-daemon"]
     ServerDaemonStart --> ServerDaemon["server-daemon"]
     StartRoutine --> ApiSmoke["make api-smoke"]
@@ -48,11 +47,9 @@ flowchart TD
   subgraph Runners["Background runner family"]
     ServerDaemon["server-daemon"]
     EvalSidecar["eval-sidecar"]
-    ManagedCaffeinate["repo-managed caffeinate"]
     RunnerContract["shared PID, liveness, log, and cleanup pattern"]
     ServerDaemon --> RunnerContract
     EvalSidecar --> RunnerContract
-    ManagedCaffeinate --> RunnerContract
   end
 
   subgraph Evals["Manual eval and OCR tooling"]
@@ -99,12 +96,12 @@ flowchart TD
 ## Reading the Map
 
 - Startup should stay narrow and chat-led: it reports GitHub health attention,
-  verifies environment health, starts the repo-managed wake lock, starts the
-  repo-managed server daemon, runs smoke checks with isolated defaults,
-  centralizes numbered step output, and stops for alignment. VS Code keeps
-  `make start` available as a manual task. Rendered UI checks use the
-  QA browser / DevTools MCP path; Playwright remains a separate explicit
-  local-browser helper surface.
+  verifies environment health, starts the repo-managed server daemon, runs
+  smoke checks with isolated defaults, centralizes numbered step output, and
+  stops for alignment. VS Code keeps `make start` available as a manual task.
+  Rendered UI checks use the QA browser / DevTools MCP path; Playwright remains
+  a separate explicit local-browser helper surface. Mac-wide keep-awake control
+  stays outside the repo in the Coffee Codex plugin.
 - Active validation and session closeout are separate surfaces:
   `make end-preflight` is branch-local validation, while `make end` is the
   session closeout routine from clean synced `main`. `make end-stop` is the
@@ -165,11 +162,11 @@ flowchart TD
   `python3.14`, and installs dependencies through the created venv.
   `make privacy-local-on` installs the current machine-local handoff exclude
   pattern; tracked docs remain visible.
-- Interactive virtualenv shells enter through `make venv`; Make records repo
-  activity and delegates shell activation to `tools/open_venv_shell.sh`.
+- Interactive virtualenv shells enter through `make venv`; Make delegates shell
+  activation to `tools/open_venv_shell.sh`.
 - Core background runners use one ownership pattern for PID files,
   stale-process handling, logs, cleanup commands, and detached launch
-  behaviour across `caffeinate`, `server-daemon`, and `eval-sidecar`.
+  behaviour across `server-daemon` and `eval-sidecar`.
   Detached child-process launch is centralized through
   `tools/launch_detached_process.py`; runner scripts retain ownership of
   their domain-specific liveness and adoption logic. The shared launcher
@@ -185,20 +182,6 @@ flowchart TD
   require positive-integer PID values before liveness or stop decisions, and
   treat terminated zombie processes as inactive instead of reporting them as
   healthy live runners.
-  `caffeinate` keeps wake-lock ownership and repo activity separate, treats
-  stopped/zombie managed PIDs as stale, removes owned runtime metadata only after
-  bounded terminate/escalate cleanup succeeds, and keeps start output concise
-  while `caffeinate-status` owns detailed PID, repo-activity, and wake-assertion
-  reporting. Its PID, log, ownership metadata, and activity metadata default to a
-  repo-scoped runtime namespace, with mutating lifecycle actions migrating owned
-  flat runtime files or cleaning orphaned flat PID metadata before launch or stop
-  decisions. It validates command, match-pattern regex, repo-slug,
-  activity-label, activity-target, active-window, and global-cleanup config
-  before activity, start, stop, stop-all, or status work touches
-  PID/activity state,
-  rejects invalid runtime output paths with direct diagnostics before launch,
-  cleanup, or metadata writes, and requires process-inspection tooling before
-  PID ownership classification or cleanup.
   Shell lifecycle runners require `ps` before making PID-state decisions, so
   missing process-inspection tooling fails early instead of degrading into
   misleading liveness state.

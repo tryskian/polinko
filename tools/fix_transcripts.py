@@ -11,7 +11,13 @@ from pathlib import Path
 
 ROOT = Path("docs/peanut/transcripts")
 EXCLUDED_DIRS = {"sessions"}
-EXCLUDED_FILES = {"README.md"}
+EXCLUDED_FILES = {"ARCHIVE_METHOD.md", "README.md"}
+
+TRANSCRIPT_HEADING_ALIASES = {
+    "## Transcript (Verbatim Text With Diagram Links)": (
+        "## Transcript (Verbatim Block)"
+    ),
+}
 
 
 def curated_transcript_files(root: Path) -> list[Path]:
@@ -30,6 +36,11 @@ def curated_transcript_files(root: Path) -> list[Path]:
 
 def ensure_core_sections(lines: list[str]) -> tuple[list[str], bool]:
     changed = False
+
+    heading_normalised = any(line in TRANSCRIPT_HEADING_ALIASES for line in lines)
+    lines = [TRANSCRIPT_HEADING_ALIASES.get(line, line) for line in lines]
+    if heading_normalised:
+        changed = True
 
     if not any(
         line.startswith("## Structured Insights (Assistant Interpretation)")

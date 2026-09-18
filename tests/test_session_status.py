@@ -51,12 +51,10 @@ class SessionStatusTests(unittest.TestCase):
                     "<server-daemon-status>",
                     f"pwd={REPO_ROOT} args: <--no-print-directory> "
                     "<eval-sidecar-status>",
-                    f"pwd={REPO_ROOT} args: <--no-print-directory> <caffeinate-status>",
                 ],
             )
             self.assertIn("== Server ==", result.stdout)
             self.assertIn("== Eval sidecar ==", result.stdout)
-            self.assertIn("== Keep-awake ==", result.stdout)
 
     def test_reports_missing_make_command(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
