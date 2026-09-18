@@ -49,6 +49,17 @@ def _matching_processes(marker: str) -> list[str]:
     return [line for line in result.stdout.splitlines() if marker in line]
 
 
+def _wait_for_paths(*paths: Path, timeout: float = 2.0) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if all(path.exists() for path in paths):
+            return
+        time.sleep(0.05)
+
+    missing = ", ".join(str(path) for path in paths if not path.exists())
+    raise AssertionError(f"Timed out waiting for detached child output: {missing}")
+
+
 class LaunchDetachedProcessTests(unittest.TestCase):
     def test_launches_command_args_and_writes_pid(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -94,10 +105,7 @@ class LaunchDetachedProcessTests(unittest.TestCase):
 
             self.addCleanup(_kill_pid_file, pid_file)
             self.assertEqual(result.returncode, 0, result.stderr)
-            for _ in range(10):
-                if args_file.exists() and child_pid_file.exists():
-                    break
-                time.sleep(0.05)
+            _wait_for_paths(args_file, child_pid_file)
             self.assertEqual(
                 args_file.read_text(encoding="utf-8").splitlines(),
                 ["alpha", "two words"],
@@ -150,10 +158,7 @@ class LaunchDetachedProcessTests(unittest.TestCase):
 
             self.addCleanup(_kill_pid_file, pid_file)
             self.assertEqual(result.returncode, 0, result.stderr)
-            for _ in range(10):
-                if args_file.exists() and child_pid_file.exists():
-                    break
-                time.sleep(0.05)
+            _wait_for_paths(args_file, child_pid_file)
             self.assertEqual(
                 args_file.read_text(encoding="utf-8").splitlines(), ["quoted value"]
             )
