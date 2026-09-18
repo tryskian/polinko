@@ -7006,3 +7006,24 @@ or branch history instead.
 - Why: A Mac-wide process is shared across repositories and tasks. Repository
   PID files and automatic start or stop hooks create conflicting ownership and
   allow one closeout to interfere with unrelated work.
+
+## D-415: Refresh vulnerable Python and Node dependency locks
+
+- Date: `2026-09-18`
+- Category: `dependency_management`
+- Tags: `pip_audit`, `npm_audit`, `lockfiles`, `overrides`, `security`
+- Human-led: The human lead approved dependency updates after closeout exposed
+  current vulnerabilities and reinforced that stale packages commonly carry
+  security risk.
+- Engineer implementation: Update the direct `httpx2` pin to `2.12.0`,
+  regenerate the pip-tools lock with `httpcore2==2.12.0`, add fixed root Node
+  overrides for `postcss-selector-parser==6.1.4` and `smol-toml==1.8.0`, and
+  regenerate `package-lock.json`.
+- Decision: Keep Python and Node audit gates strict. Resolve active advisories
+  with the smallest compatible direct-pin or transitive-override refresh, and
+  keep unrelated grouped dependency upgrades outside the security fix.
+- Why: The previous Python lock carried five `httpx2` and `httpcore2`
+  advisories, while the Node lock carried denial-of-service advisories through
+  `postcss-selector-parser` and `smol-toml`. The bounded refresh clears those
+  findings without importing the broad version and lint-policy drift in the
+  open grouped Dependabot updates.

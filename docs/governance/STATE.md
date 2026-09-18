@@ -794,14 +794,16 @@ Last updated: 2026-09-18
     pip-tools backtracking resolver
   - Python security tooling and pins are tracked through `requirements.in` plus
     generated `requirements.txt`; current refreshed pins include
-    `pip-audit==2.10.0`, `PyJWT==2.13.0`, `pip==26.1.2`, and `pypdf==6.13.3`
+    `httpx2==2.12.0`, `httpcore2==2.12.0`, `pip-audit==2.10.1`,
+    `PyJWT==2.13.0`, `pip==26.2.1`, and `pypdf==6.16.2`
   - PR `#1049` updated active security pins to `mcp==1.28.1` and
     `click==8.3.3`; GitHub Actions security checks passed before merge, while
     Dependabot alert closure may lag until GitHub refreshes the dependency
     graph
   - root Node security locks are tracked through `package-lock.json`; current
     refreshed transitive pins include `undici==7.28.0`,
-    `dompurify==3.4.12`, `markdown-it==14.3.0`, and `linkify-it==5.0.2`
+    `dompurify==3.4.14`, `markdown-it==14.3.0`, `linkify-it==5.0.2`,
+    `postcss-selector-parser==6.1.4`, and `smol-toml==1.8.0`
   - GitHub CI runs on pull requests and on pushes to `main`; feature-branch
     pushes rely on the pull-request gate to avoid duplicate red runs, and CI
     plus dependency-review workflows cancel superseded runs when a newer commit
