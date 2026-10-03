@@ -794,7 +794,7 @@ Last updated: 2026-10-03
     pip-tools backtracking resolver
   - Python security tooling and pins are tracked through `requirements.in` plus
     generated `requirements.txt`; current refreshed pins include
-    `anyio==4.14.2`, `httpx2==2.12.0`, `httpcore2==2.12.0`,
+    `anyio==4.15.1`, `httpx2==2.13.1`, `httpcore2==2.13.1`,
     `pip-audit==2.10.1`, `PyJWT==2.15.0`, `pip==26.2.1`, and
     `pypdf==6.19.0`
   - PR `#1049` updated active security pins to `mcp==1.28.1` and
@@ -808,9 +808,11 @@ Last updated: 2026-10-03
   - PR #1094 merged on October 3, removing the unpatched `braces` dependency:
     `markdownlint-cli` 0.49.1 retains the same `markdownlint` 0.41.1 engine,
     rule overrides and ignored paths; overrides now live in `.markdownlint.yaml`
-  - the Mermaid CLI version is unchanged; its compatible Tailwind peer resolves
-    to 4.3.3, removing the older glob/watch dependency chain
+  - PR #1094 retained the Mermaid CLI version and refreshed its compatible
+    Tailwind peer to 4.3.3, removing the older glob/watch dependency chain
   - the Markdown CLI's YAML parser is pinned to patched `js-yaml` 5.4.1
+  - the Ruff 0.16 upgrade explicitly preserves the previous `E4`, `E7`, `E9`
+    and `F` lint policy; its 59 enabled rules match the prior effective set
   - GitHub CI runs on pull requests and on pushes to `main`; feature-branch
     pushes rely on the pull-request gate to avoid duplicate red runs, and CI
     plus dependency-review workflows cancel superseded runs when a newer commit
