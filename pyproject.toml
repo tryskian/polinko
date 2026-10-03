@@ -40,3 +40,7 @@ version = { attr = "polinko.__version__" }
 
 [tool.ruff]
 target-version = "py313"
+
+[tool.ruff.lint]
+# Preserve the repository's rule selection from Ruff 0.15 when upgrading tools.
+select = ["E4", "E7", "E9", "F"]
