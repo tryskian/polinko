@@ -802,9 +802,15 @@ Last updated: 2026-09-18
     Dependabot alert closure may lag until GitHub refreshes the dependency
     graph
   - root Node security locks are tracked through `package-lock.json`; current
-    refreshed transitive pins include `undici==7.28.0`,
-    `dompurify==3.4.14`, `markdown-it==14.3.0`, `linkify-it==5.0.2`,
+    refreshed transitive pins include `undici==7.30.0`,
+    `dompurify==3.4.16`, `markdown-it==14.3.1`, `linkify-it==5.0.2`,
     `postcss-selector-parser==6.1.4`, and `smol-toml==1.8.0`
+  - October 3 tooling maintenance removes the unpatched `braces` dependency:
+    `markdownlint-cli` 0.49.1 retains the same `markdownlint` 0.41.1 engine,
+    rule overrides and ignored paths; overrides now live in `.markdownlint.yaml`
+  - the Mermaid CLI version is unchanged; its compatible Tailwind peer resolves
+    to 4.3.3, removing the older glob/watch dependency chain
+  - the Markdown CLI's YAML parser is pinned to patched `js-yaml` 5.4.1
   - GitHub CI runs on pull requests and on pushes to `main`; feature-branch
     pushes rely on the pull-request gate to avoid duplicate red runs, and CI
     plus dependency-review workflows cancel superseded runs when a newer commit

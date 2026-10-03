@@ -42,7 +42,7 @@ ROUTINE_PATHS = (
     ".dockerignore",
     ".gitattributes",
     ".gitignore",
-    ".markdownlint-cli2.yaml",
+    ".markdownlint.yaml",
     ".markdownlintignore",
     ".pre-commit-config.yaml",
     "Dockerfile",
