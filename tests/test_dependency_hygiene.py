@@ -488,10 +488,10 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertNotIn("black", precommit)
 
     def test_markdownlint_ignores_private_peanut_lane(self) -> None:
-        markdownlint = _read(".markdownlint-cli2.yaml")
+        ignored_paths = _read(".markdownlintignore").splitlines()
 
-        self.assertIn('"docs/peanut/**/*.md"', markdownlint)
-        self.assertNotIn("docs/peanut/transcripts/**/*.md", markdownlint)
+        self.assertIn("docs/peanut/**", ignored_paths)
+        self.assertNotIn("docs/peanut/transcripts/**/*.md", ignored_paths)
 
 
 if __name__ == "__main__":
