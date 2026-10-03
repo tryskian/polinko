@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-09-18
+Last updated: 2026-10-03
 
 ## Current Truth
 
@@ -795,8 +795,8 @@ Last updated: 2026-09-18
   - Python security tooling and pins are tracked through `requirements.in` plus
     generated `requirements.txt`; current refreshed pins include
     `anyio==4.14.2`, `httpx2==2.12.0`, `httpcore2==2.12.0`,
-    `pip-audit==2.10.1`, `PyJWT==2.13.0`, `pip==26.2.1`, and
-    `pypdf==6.16.2`
+    `pip-audit==2.10.1`, `PyJWT==2.15.0`, `pip==26.2.1`, and
+    `pypdf==6.19.0`
   - PR `#1049` updated active security pins to `mcp==1.28.1` and
     `click==8.3.3`; GitHub Actions security checks passed before merge, while
     Dependabot alert closure may lag until GitHub refreshes the dependency
@@ -805,7 +805,7 @@ Last updated: 2026-09-18
     refreshed transitive pins include `undici==7.30.0`,
     `dompurify==3.4.16`, `markdown-it==14.3.1`, `linkify-it==5.0.2`,
     `postcss-selector-parser==6.1.4`, and `smol-toml==1.8.0`
-  - October 3 tooling maintenance removes the unpatched `braces` dependency:
+  - PR #1094 merged on October 3, removing the unpatched `braces` dependency:
     `markdownlint-cli` 0.49.1 retains the same `markdownlint` 0.41.1 engine,
     rule overrides and ignored paths; overrides now live in `.markdownlint.yaml`
   - the Mermaid CLI version is unchanged; its compatible Tailwind peer resolves
