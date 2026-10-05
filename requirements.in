@@ -5,14 +5,14 @@ uvicorn==0.54.0
 starlette==1.7.0
 openai==2.54.0
 openai-agents==0.20.0
-python-dotenv==1.2.3
+python-dotenv==1.2.4
 requests==2.34.2
 cryptography==50.0.2
 pypdf==6.19.0
 Pillow==12.3.0
-mypy==2.3.1
+mypy==2.4.0
 pre-commit==4.6.2
-ruff==0.16.9
+ruff==0.16.10
 pytest==9.1.1
 types-PyYAML==6.0.12.20260906
 yamllint==1.38.0

@@ -112,7 +112,7 @@ mdurl==0.1.2
     # via markdown-it-py
 msgpack==1.2.1
     # via cachecontrol
-mypy==2.3.1
+mypy==2.4.0
     # via -r requirements.in
 mypy-extensions==1.1.0
     # via mypy
@@ -190,7 +190,7 @@ pytest==9.1.1
     # via -r requirements.in
 python-discovery==1.6.1
     # via virtualenv
-python-dotenv==1.2.3
+python-dotenv==1.2.4
     # via
     #   -r requirements.in
     #   pydantic-settings
@@ -216,7 +216,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.16.9
+ruff==0.16.10
     # via -r requirements.in
 sniffio==1.3.1
     # via openai
