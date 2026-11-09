@@ -11,12 +11,12 @@
     "check:site": "npm run site:check"
   },
   "devDependencies": {
-    "@mermaid-js/mermaid-cli": "12.0.0",
-    "d3": "7.9.0",
+    "@mermaid-js/mermaid-cli": "12.2.0",
+    "d3": "7.9.2",
     "d3-sankey": "0.12.3",
-    "jsdom": "30.1.1",
+    "jsdom": "31.0.0",
     "pyright": "1.1.414",
-    "markdownlint-cli": "0.49.1"
+    "markdownlint-cli": "0.50.0"
   },
   "overrides": {
     "dompurify": "3.4.16",
