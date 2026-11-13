@@ -49,3 +49,15 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
+
+  # This snapshot stays out of the active build, but GitHub still scans its lockfile.
+  - package-ecosystem: "npm"
+    directory: "/.archive/quarantine/portfolio-2026-06-29/apps/portfolio"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    groups:
+      archived-portfolio-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
