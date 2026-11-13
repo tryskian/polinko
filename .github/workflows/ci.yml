@@ -128,5 +128,20 @@ jobs:
           cache: "npm"
       - name: Install Node dependencies
         run: npm ci
+      - name: Verify tracked npm lockfile coverage
+        run: |
+          expected="$(printf '%s\n' \
+            '.archive/quarantine/portfolio-2026-06-29/apps/portfolio/package-lock.json' \
+            'package-lock.json' | LC_ALL=C sort)"
+          tracked="$(git ls-files -- 'package-lock.json' ':(glob)**/package-lock.json' | LC_ALL=C sort)"
+          if [ "$tracked" != "$expected" ]; then
+            echo 'Tracked npm lockfiles changed. Update the audit steps and Dependabot directories.'
+            diff -u <(printf '%s\n' "$expected") <(printf '%s\n' "$tracked") || true
+            exit 1
+          fi
       - name: Audit Node dependencies
         run: make ci-node-security
+      - name: Audit archived portfolio lockfile
+        if: ${{ !cancelled() }}
+        working-directory: .archive/quarantine/portfolio-2026-06-29/apps/portfolio
+        run: npm audit --audit-level=moderate
