@@ -11,19 +11,24 @@
     "check:site": "npm run site:check"
   },
   "devDependencies": {
-    "@mermaid-js/mermaid-cli": "12.0.0",
+    "@mermaid-js/mermaid-cli": "12.2.0",
     "d3": "7.9.0",
     "d3-sankey": "0.12.3",
-    "jsdom": "30.1.1",
-    "pyright": "1.1.414",
-    "markdownlint-cli": "0.49.1"
+    "jsdom": "31.0.1",
+    "markdownlint-cli": "0.50.0",
+    "pyright": "1.1.414"
   },
   "overrides": {
-    "dompurify": "3.4.16",
-    "markdown-it": "14.3.1",
+    "dompurify": "3.4.17",
+    "markdown-it": "14.3.3",
     "postcss-selector-parser": "6.1.4",
-    "smol-toml": "1.8.0",
+    "smol-toml": "1.9.1",
     "ws": "8.21.0",
-    "js-yaml": "5.4.1"
+    "js-yaml": "5.4.1",
+    "katex": "0.18.2",
+    "source-map-js": "1.2.2",
+    "undici": "8.12.4",
+    "zod": "4.6.7",
+    "minimatch@>=7": "11.0.1"
   }
 }
