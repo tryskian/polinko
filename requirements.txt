@@ -31,7 +31,7 @@ cachecontrol==0.14.4
     # via
     #   cachecontrol
     #   pip-audit
-certifi==2026.2.25
+certifi==2026.10.23
     # via
     #   httpcore
     #   httpx
@@ -54,13 +54,13 @@ cyclonedx-python-lib==11.11.0
     # via pip-audit
 defusedxml==0.7.1
     # via py-serializable
-distlib==0.4.0
+distlib==0.4.4
     # via virtualenv
 distro==1.9.0
     # via openai
 fastapi==0.142.2
     # via -r requirements.in
-filelock==3.25.2
+filelock==4.2.10
     # via
     #   cachecontrol
     #   python-discovery
@@ -106,11 +106,11 @@ license-expression==30.4.4
     # via cyclonedx-python-lib
 markdown-it-py==4.2.0
     # via rich
-mcp==1.28.1
+mcp==1.30.0
     # via openai-agents
 mdurl==0.1.2
     # via markdown-it-py
-msgpack==1.2.1
+msgpack==1.2.4
     # via cachecontrol
 mypy==2.3.1
     # via -r requirements.in
@@ -124,22 +124,23 @@ openai==2.54.0
     #   openai-agents
 openai-agents==0.20.0
     # via -r requirements.in
-opentelemetry-api==1.45.0
+opentelemetry-api==1.45.2
     # via fastapi
 packageurl-python==0.17.6
     # via cyclonedx-python-lib
-packaging==26.0
+packaging==26.3
     # via
     #   build
     #   pip-audit
     #   pip-requirements-parser
     #   pytest
+    #   virtualenv
     #   wheel
 pathspec==1.0.4
     # via
     #   mypy
     #   yamllint
-pillow==12.3.0
+pillow==13.0.0
     # via -r requirements.in
 pip-api==0.0.34
     # via pip-audit
@@ -180,7 +181,7 @@ pyjwt==2.15.0
     # via mcp
 pyparsing==3.3.2
     # via pip-requirements-parser
-pypdf==6.19.0
+pypdf==6.21.4
     # via -r requirements.in
 pyproject-hooks==1.2.0
     # via
@@ -266,7 +267,7 @@ uvicorn==0.54.0
     # via
     #   -r requirements.in
     #   mcp
-virtualenv==21.7.13
+virtualenv==21.15.6
     # via pre-commit
 websockets==16.0
     # via openai-agents
@@ -280,5 +281,5 @@ pip==26.2.1
     # via
     #   pip-api
     #   pip-tools
-setuptools==84.0.0
+setuptools==84.2.1
     # via pip-tools
